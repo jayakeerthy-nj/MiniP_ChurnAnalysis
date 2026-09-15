@@ -1,0 +1,114 @@
+{
+  "currentModel": "XGBoost",
+  "modelVersion": "xgb-v1.4",
+  "trainingTimestamp": "2026-09-14T14:48:36.699068Z",
+  "datasetSize": 1200,
+  "featuresCount": 29,
+  "evaluationMetrics": {
+    "Logistic Regression": {
+      "accuracy": 0.9875,
+      "precision": 0.9388,
+      "recall": 1.0,
+      "f1": 0.9684,
+      "rocAuc": 0.9994,
+      "prAuc": 0.9976,
+      "confusionMatrix": [
+        [
+          191,
+          3
+        ],
+        [
+          0,
+          46
+        ]
+      ]
+    },
+    "Random Forest": {
+      "accuracy": 0.9917,
+      "precision": 0.9783,
+      "recall": 0.9783,
+      "f1": 0.9783,
+      "rocAuc": 0.9999,
+      "prAuc": 0.9995,
+      "confusionMatrix": [
+        [
+          193,
+          1
+        ],
+        [
+          1,
+          45
+        ]
+      ]
+    },
+    "XGBoost": {
+      "accuracy": 0.9833,
+      "precision": 0.9565,
+      "recall": 0.9565,
+      "f1": 0.9565,
+      "rocAuc": 0.9984,
+      "prAuc": 0.9931,
+      "confusionMatrix": [
+        [
+          192,
+          2
+        ],
+        [
+          2,
+          44
+        ]
+      ]
+    }
+  },
+  "featureImportance": [
+    {
+      "feature": "monthlyActiveDays",
+      "importance": 4.9803
+    },
+    {
+      "feature": "transactionGrowthRate",
+      "importance": 1.5227
+    },
+    {
+      "feature": "averageBalance",
+      "importance": 0.3888
+    },
+    {
+      "feature": "webLoginFrequency",
+      "importance": 0.2607
+    },
+    {
+      "feature": "engagementScore",
+      "importance": 0.2512
+    },
+    {
+      "feature": "maximumBalance",
+      "importance": 0.2382
+    },
+    {
+      "feature": "creditScore",
+      "importance": 0.1942
+    },
+    {
+      "feature": "currentBalance",
+      "importance": 0.1515
+    },
+    {
+      "feature": "hasCreditCard",
+      "importance": 0.1394
+    },
+    {
+      "feature": "balanceVolatility",
+      "importance": 0.105
+    },
+    {
+      "feature": "mobileLoginFrequency",
+      "importance": 0.0797
+    },
+    {
+      "feature": "daysSinceLastTransaction",
+      "importance": 0.0658
+    }
+  ],
+  "silhouetteScore": 0.1997
+}

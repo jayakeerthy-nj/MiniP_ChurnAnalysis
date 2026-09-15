@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: aegis-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: aegis-ml-service
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - ARTIFACTS_DIR=/app/artifacts
+    volumes:
+      - ./ml-service/artifacts:/app/artifacts
+    depends_on:
+      - mongodb
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aegis-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/banking_churn_db
+      - ML_SERVICE_URL=http://ml-service:8000
+      - JWT_ACCESS_SECRET=aegis_prod_access_secret_2026
+      - JWT_REFRESH_SECRET=aegis_prod_refresh_secret_2026
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - mongodb
+      - ml-service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aegis-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

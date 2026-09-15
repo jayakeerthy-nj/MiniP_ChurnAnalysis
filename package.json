@@ -1,0 +1,18 @@
+{
+  "name": "banking-churn-analytics",
+  "version": "1.0.0",
+  "description": "Banking Customer Risk and Churn Analytics Platform",
+  "scripts": {
+    "dev:ml": "cd ml-service && ./venv/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "predev": "docker start mongo-churn 2>/dev/null || true",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"ML,BACKEND,FRONTEND\" -c \"yellow.bold,blue.bold,green.bold\" \"npm run dev:ml\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "seed": "npm --prefix backend run seed",
+    "train": "cd ml-service && ./venv/bin/python3 training/train.py"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
