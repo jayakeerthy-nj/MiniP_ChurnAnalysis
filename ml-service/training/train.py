@@ -17,8 +17,9 @@ from xgboost import XGBClassifier
 import shap
 
 def train_and_evaluate():
-    data_path = "/home/jayy/minip/data/customer_features.csv"
-    artifacts_dir = "/home/jayy/minip/ml-service/artifacts"
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_path = os.environ.get("DATA_PATH", os.path.join(base_dir, "..", "data", "customer_features.csv"))
+    artifacts_dir = os.environ.get("ARTIFACTS_DIR", os.path.join(base_dir, "artifacts"))
     os.makedirs(artifacts_dir, exist_ok=True)
     
     df = pd.read_csv(data_path)
@@ -236,8 +237,9 @@ def train_and_evaluate():
         "CRITICAL" if p >= 0.80 else "HIGH" if p >= 0.60 else "MEDIUM" if p >= 0.30 else "LOW"
         for p in df_pred_probs
     ]
-    df.to_json("/home/jayy/minip/data/customerFeatures.json", orient="records", indent=2)
-    print("Updated /home/jayy/minip/data/customerFeatures.json with clusters and predictions.")
+    out_features_json = os.environ.get("CUSTOMER_FEATURES_JSON", os.path.join(base_dir, "..", "data", "customerFeatures.json"))
+    df.to_json(out_features_json, orient="records", indent=2)
+    print(f"Updated {out_features_json} with clusters and predictions.")
     print("Training and evaluation completed successfully!")
 
 if __name__ == "__main__":

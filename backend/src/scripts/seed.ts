@@ -13,8 +13,11 @@ import { Segment } from "../models/Segment.js";
 import { ModelVersion } from "../models/ModelVersion.js";
 import { AuditLog } from "../models/AuditLog.js";
 
-const DATA_DIR = "/home/jayy/minip/data";
-const ARTIFACTS_DIR = "/home/jayy/minip/ml-service/artifacts";
+const ROOT_DIR = fs.existsSync(path.resolve(process.cwd(), "data"))
+  ? process.cwd()
+  : path.resolve(process.cwd(), "..");
+const DATA_DIR = process.env.DATA_DIR || path.resolve(ROOT_DIR, "data");
+const ARTIFACTS_DIR = process.env.ARTIFACTS_DIR || path.resolve(ROOT_DIR, "ml-service/artifacts");
 
 async function seedDatabase() {
   console.log("🌱 Starting database seeding process...");

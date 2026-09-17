@@ -346,15 +346,16 @@ if __name__ == "__main__":
     data = generate_synthetic_bank_data(num_customers=1200)
     
     import os
-    os.makedirs("/home/jayy/minip/data", exist_ok=True)
+    data_dir = os.environ.get("DATA_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"))
+    os.makedirs(data_dir, exist_ok=True)
     
     for key, items in data.items():
-        filepath = f"/home/jayy/minip/data/{key}.json"
+        filepath = os.path.join(data_dir, f"{key}.json")
         with open(filepath, "w") as f:
             json.dump(items, f)
         print(f"Saved {len(items)} records to {filepath}")
     
     df_features = pd.DataFrame(data["customerFeatures"])
-    df_features.to_csv("/home/jayy/minip/data/customer_features.csv", index=False)
-    print(f"Saved ML feature matrix ({df_features.shape}) to /home/jayy/minip/data/customer_features.csv")
+    df_features.to_csv(os.path.join(data_dir, "customer_features.csv"), index=False)
+    print(f"Saved ML feature matrix ({df_features.shape}) to {os.path.join(data_dir, 'customer_features.csv')}")
     print(f"Churn distribution: {df_features['churn'].value_counts().to_dict()}")

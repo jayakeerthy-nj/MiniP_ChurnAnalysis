@@ -18,7 +18,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-ARTIFACTS_DIR = os.environ.get("ARTIFACTS_DIR", "/home/jayy/minip/ml-service/artifacts")
+default_artifacts_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "artifacts")
+ARTIFACTS_DIR = os.environ.get("ARTIFACTS_DIR", default_artifacts_dir)
 
 # Load artifacts
 print(f"Loading ML artifacts from {ARTIFACTS_DIR}...")
