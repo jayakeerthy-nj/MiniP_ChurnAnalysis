@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "AegisRisk | Enterprise Banking Risk & Churn Intelligence Engine",
-  description: "AI risk and customer intelligence for tier-1 retail banking. Predict attrition, understand behavioral drivers via SHAP, and prescribe retention workflows.",
+  title: "cmd. | Churn Modeling & Decision Engine",
+  description: "cmd. (Churn Modeling & Decision Engine): Enterprise customer risk profiling, machine learning churn prediction, SHAP explainability, behavioral segmentation, and retention strategy simulation for banking institutions.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -17,11 +21,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body className="bg-[#f8f9fa] text-[#2f2f34] font-mono selection:bg-[#3d7eff] selection:text-white antialiased">
+        {children}
+      </body>
     </html>
   );
 }

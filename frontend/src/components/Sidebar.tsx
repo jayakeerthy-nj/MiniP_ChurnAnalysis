@@ -3,8 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CmdLogo } from "./CmdLogo";
 import { useAuthStore } from "../stores/authStore";
 import {
+  Terminal,
   LayoutDashboard,
   Users,
   AlertTriangle,
@@ -15,7 +17,6 @@ import {
   FileText,
   ShieldCheck,
   LogOut,
-  UserCheck,
   ArrowLeft
 } from "lucide-react";
 
@@ -29,109 +30,123 @@ export const Sidebar: React.FC = () => {
   };
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "customers", label: "Customer 360", icon: Users },
-    { id: "risk", label: "Risk Watchlist", icon: AlertTriangle },
-    { id: "simulator", label: "What-If Engine", icon: Sliders },
-    { id: "segments", label: "Segments", icon: PieChart },
-    { id: "churn", label: "Churn Analytics", icon: TrendingDown },
-    { id: "recommendations", label: "Retention Engine", icon: Sparkles },
-    { id: "reports", label: "Reports", icon: FileText },
+    { id: "dashboard", fKey: "1", label: "Dashboard", icon: LayoutDashboard },
+    { id: "customers", fKey: "2", label: "Customer 360", icon: Users },
+    { id: "risk", fKey: "3", label: "Risk Watchlist", icon: AlertTriangle },
+    { id: "simulator", fKey: "4", label: "What-If Engine", icon: Sliders },
+    { id: "segments", fKey: "5", label: "Segments", icon: PieChart },
+    { id: "churn", fKey: "6", label: "Churn Analytics", icon: TrendingDown },
+    { id: "recommendations", fKey: "7", label: "Retention Engine", icon: Sparkles },
+    { id: "reports", fKey: "8", label: "Reports", icon: FileText },
   ];
 
   if (user?.role === "ADMIN") {
-    navItems.push({ id: "admin", label: "Admin Console", icon: ShieldCheck });
+    navItems.push({ id: "admin", fKey: "9", label: "Admin Console", icon: ShieldCheck });
   }
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
+      {/* Brand Header */}
+      <div>
+        <div className="sidebar-brand">
           <div className="brand-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="16 18 22 12 16 6"></polyline>
-              <polyline points="8 6 2 12 8 18"></polyline>
-            </svg>
+            <Terminal size={18} />
           </div>
-          <span className="brand-title">AegisRisk</span>
+          <span className="brand-title">CMD</span>
+          <span className="text-[10px] text-[#8b9098] bg-[#f1f3f5] px-1.5 py-0.5 border border-[#e2e4e8] rounded-[2px] ml-auto font-bold">
+            v4.2
+          </span>
         </div>
+
+        {/* Back link */}
+        <div className="px-2 pt-1 pb-2">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-[11px] text-[#8b9098] hover:text-[#3d7eff] transition-colors py-1 px-1 font-mono uppercase"
+          >
+            <ArrowLeft size={12} />
+            <span>[ ESC: LANDING ]</span>
+          </Link>
+        </div>
+
+        {/* Navigation List */}
+        <nav className="nav-stack">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`nav-link text-left w-full cursor-pointer ${isActive ? "active" : ""}`}
+              >
+                <span className="text-[9px] font-bold text-[#3d7eff] bg-[#3d7eff]/10 border border-[#3d7eff]/20 px-1 py-0.2 rounded-[2px]">
+                  [{item.fKey}]
+                </span>
+                <Icon size={14} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
-      <div className="px-3 pt-1 pb-2">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-[11px] font-semibold text-[#94a3b8] hover:text-white px-2.5 py-1.5 rounded-lg bg-[#141820] hover:bg-[#1c222c] border border-[#1d232c] transition-all"
-        >
-          <ArrowLeft size={13} className="text-[#00b4d8]" />
-          <span>Landing Page</span>
-        </Link>
-      </div>
-
-      <nav className="nav-stack">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id || (item.id === "customers" && activeTab === "customer-detail");
-          return (
+      {/* Footer / User / Role Switcher */}
+      <div className="sidebar-footer">
+        {/* Quick Role Switcher */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[9px] font-bold text-[#8b9098] uppercase px-1">
+            DESK PRESET:
+          </span>
+          <div className="grid grid-cols-3 gap-1 text-[10px]">
             <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`nav-link text-left w-full flex items-center gap-2.5 transition-colors ${
-                isActive ? "active" : ""
+              onClick={() => switchRole("ANALYST")}
+              className={`py-1 px-0.5 border text-center font-bold rounded-[2px] cursor-pointer ${
+                user?.role === "ANALYST"
+                  ? "bg-[#3d7eff] text-white border-[#3d7eff]"
+                  : "bg-[#f8f9fa] text-[#8b9098] border-[#e2e4e8] hover:border-[#b3b3b3]"
               }`}
             >
-              <Icon size={18} />
-              <span>{item.label}</span>
+              ANL
             </button>
-          );
-        })}
-      </nav>
-
-      {/* Role Switcher & Profile */}
-      <div className="sidebar-footer">
-        <div className="mb-2.5 px-1 flex items-center justify-between text-[11px] text-[#64748b]">
-          <span>ACTIVE ROLE</span>
-          <div className="flex gap-1">
-            {(["ADMIN", "ANALYST", "MANAGER"] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => switchRole(r)}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-all ${
-                  user?.role === r ? "bg-[#00b4d8] text-black font-semibold" : "bg-[#1c222c] text-[#94a3b8] hover:text-white"
-                }`}
-              >
-                {r[0]}
-              </button>
-            ))}
+            <button
+              onClick={() => switchRole("MANAGER")}
+              className={`py-1 px-0.5 border text-center font-bold rounded-[2px] cursor-pointer ${
+                user?.role === "MANAGER"
+                  ? "bg-[#3d7eff] text-white border-[#3d7eff]"
+                  : "bg-[#f8f9fa] text-[#8b9098] border-[#e2e4e8] hover:border-[#b3b3b3]"
+              }`}
+            >
+              MGR
+            </button>
+            <button
+              onClick={() => switchRole("ADMIN")}
+              className={`py-1 px-0.5 border text-center font-bold rounded-[2px] cursor-pointer ${
+                user?.role === "ADMIN"
+                  ? "bg-[#3d7eff] text-white border-[#3d7eff]"
+                  : "bg-[#f8f9fa] text-[#8b9098] border-[#e2e4e8] hover:border-[#b3b3b3]"
+              }`}
+            >
+              CRO
+            </button>
           </div>
         </div>
 
+        {/* User Card */}
         <div className="user-chip">
           <div className="user-avatar">
-            {user?.name ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2) : "AK"}
+            {user?.name?.[0]?.toUpperCase() || "O"}
           </div>
           <div className="user-info">
-            <span className="user-name">{user?.name || "Arjun Kapoor"}</span>
-            <span className="user-role font-mono text-[10px]">{user?.role || "ADMIN"}</span>
+            <span className="user-name">{user?.name || "Operator"}</span>
+            <span className="user-role">{user?.role || "ANALYST"}</span>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-1.5 mt-2">
-          <button
-            onClick={() => router.push("/login")}
-            className="btn-cyan-action text-[11px] py-1.5 justify-center"
-            title="Switch Persona / Login"
-          >
-            <UserCheck size={13} />
-            <span>Switch</span>
-          </button>
-
           <button
             onClick={handleLogout}
-            className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-[#1c222c] hover:bg-red-500/20 text-[#94a3b8] hover:text-red-400 border border-[#27303d] text-[11px] font-semibold transition-all"
-            title="Sign out of AegisRisk"
+            className="ml-auto text-[#8b9098] hover:text-[#ef4444] p-1 cursor-pointer"
+            title="Log out from CMD Terminal"
           >
             <LogOut size={13} />
-            <span>Logout</span>
           </button>
         </div>
       </div>

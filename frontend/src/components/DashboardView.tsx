@@ -3,12 +3,51 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { useAuthStore } from "../stores/authStore";
-import { ArrowUpRight, ArrowDownRight, ShieldAlert, CheckCircle, Zap } from "lucide-react";
+import { ShieldAlert, RefreshCw, BarChart2, ArrowUpRight, CheckCircle2, AlertTriangle } from "lucide-react";
+
+interface DashboardData {
+  kpis?: {
+    totalCustomers?: number;
+    activeCustomers?: number;
+    churnedCustomers?: number;
+    churnRate?: number;
+    highRiskCount?: number;
+    criticalRiskCount?: number;
+    totalBalance?: number;
+    avgBalance?: number;
+    avgEngagementScore?: number;
+    unresolvedComplaints?: number;
+  };
+  riskDistribution?: Array<{
+    level: string;
+    count: number;
+    percentage: number;
+    color: string;
+  }>;
+  monthlyTrend?: Array<{
+    month: string;
+    churnRate: number;
+    activityVolume: number;
+    criticalRiskCount: number;
+    drainageAmount: number;
+  }>;
+  watchlist?: Array<{
+    customerId: string;
+    name?: string;
+    city?: string;
+    currentBalance?: number;
+    predictedChurnProb?: number;
+    predictedRiskLevel?: string;
+    unresolvedComplaints?: number;
+    cluster?: number;
+  }>;
+}
 
 export const DashboardView: React.FC = () => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState("1Y");
   const { setSelectedCustomerId, setActiveTab } = useAuthStore();
 
   useEffect(() => {
@@ -16,308 +55,420 @@ export const DashboardView: React.FC = () => {
   }, []);
 
   const fetchDashboard = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const res = await api.get("/analytics/dashboard");
-      const watchlistRes = await api.get("/analytics/risk");
-      setData({ ...res.data, watchlist: watchlistRes.data?.highRiskWatchlist || [] });
+      const [dashRes, riskRes] = await Promise.allSettled([
+        api.get("/analytics/dashboard"),
+        api.get("/analytics/risk")
+      ]);
+
+      const dashData = dashRes.status === "fulfilled" ? dashRes.value.data : {};
+      const riskData = riskRes.status === "fulfilled" ? riskRes.value.data : {};
+
+      setData({
+        ...dashData,
+        watchlist: riskData?.highRiskWatchlist || []
+      });
     } catch (err: any) {
-      setError(err.message || "Failed to load dashboard data");
+      setError("Failed to load analytics dashboard data.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] text-cyanMain font-mono animate-pulse">
-        <Zap className="animate-spin mr-2" size={20} /> Loading Enterprise Risk Engine...
-      </div>
-    );
-  }
+  const kpis = data?.kpis;
+  const watchlist = (data?.watchlist || []).slice(0, 5);
+  const riskDistribution = data?.riskDistribution || [];
+  const monthlyTrend = data?.monthlyTrend || [];
 
-  if (error || !data) {
-    return (
-      <div className="p-8 text-center text-critical bg-subtle rounded-lg border border-borderMuted">
-        <p>Failed to load dashboard: {error}</p>
-        <button onClick={fetchDashboard} className="btn-cyan-sm mt-4">Retry</button>
-      </div>
-    );
-  }
+  // Generate SVG path for 12-month churn trend
+  const svgWidth = 800;
+  const svgHeight = 200;
+  const paddingX = 40;
+  const paddingY = 20;
 
-  const kpis = data.kpis;
-  const watchlist = data.watchlist.slice(0, 5);
+  let trendPath = "";
+  if (monthlyTrend.length > 1) {
+    const maxRate = 30; // 30% max scale
+    const points = monthlyTrend.map((d, idx) => {
+      const x = paddingX + (idx / (monthlyTrend.length - 1)) * (svgWidth - paddingX * 2);
+      const y = svgHeight - paddingY - (Math.min(d.churnRate, maxRate) / maxRate) * (svgHeight - paddingY * 2);
+      return `${x},${y}`;
+    });
+    trendPath = `M ${points.join(" L ")}`;
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Top Row 5 Metric Cards */}
-      <section className="kpi-banner">
+    <div className="space-y-4 font-mono text-xs">
+      {/* 1. TOP KPI STATUS STRIP */}
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
+        {/* Total Monitored Capital */}
         <div className="kpi-box">
-          <div className="kpi-top">
-            <span className="kpi-title">Total Monitored Capital</span>
-          </div>
+          <div className="kpi-title">MONITORED CAPITAL</div>
           <div className="kpi-bottom">
-            <span className="kpi-figure font-mono">₹{(kpis.totalBalance / 10000000).toFixed(2)} Cr</span>
-            <span className="tag-pill tag-green">+8.4%</span>
+            <span className="kpi-figure">
+              {kpis?.totalBalance !== undefined
+                ? `INR ${(kpis.totalBalance / 10000000).toFixed(2)} Cr`
+                : "—"}
+            </span>
           </div>
         </div>
 
+        {/* Total Customers */}
         <div className="kpi-box">
-          <div className="kpi-top">
-            <span className="kpi-title">Critical Churn Risk</span>
-          </div>
+          <div className="kpi-title">TOTAL CUSTOMERS</div>
           <div className="kpi-bottom">
-            <span className="kpi-figure text-critical font-mono">{kpis.criticalRiskCount}</span>
-            <span className="tag-pill tag-red">Active Vigil</span>
+            <span className="kpi-figure">
+              {kpis?.totalCustomers !== undefined ? kpis.totalCustomers.toLocaleString() : "—"}
+            </span>
           </div>
         </div>
 
+        {/* Active Customers */}
         <div className="kpi-box">
-          <div className="kpi-top">
-            <span className="kpi-title">Unresolved Grievances</span>
-          </div>
+          <div className="kpi-title">ACTIVE ACCOUNTS</div>
           <div className="kpi-bottom">
-            <span className="kpi-figure font-mono">{kpis.unresolvedComplaints}</span>
-            <span className="tag-pill tag-neutral">SLA 94%</span>
+            <span className="kpi-figure text-[#10b981]">
+              {kpis?.activeCustomers !== undefined ? kpis.activeCustomers.toLocaleString() : "—"}
+            </span>
           </div>
         </div>
 
+        {/* Calibrated Churn Rate */}
         <div className="kpi-box">
-          <div className="kpi-top">
-            <span className="kpi-title">Avg Engagement Score</span>
-          </div>
+          <div className="kpi-title">CHURN RATE</div>
           <div className="kpi-bottom">
-            <span className="kpi-figure font-mono">{kpis.avgEngagementScore}</span>
-            <span className="tag-pill tag-cyan">Target: 70</span>
+            <span className="kpi-figure text-[#3d7eff]">
+              {kpis?.churnRate !== undefined ? `${kpis.churnRate}%` : "—"}
+            </span>
           </div>
         </div>
 
+        {/* Critical Risk Count */}
         <div className="kpi-box">
-          <div className="kpi-top">
-            <span className="kpi-title">Baseline Churn Rate</span>
-          </div>
+          <div className="kpi-title">CRITICAL RISK</div>
           <div className="kpi-bottom">
-            <span className="kpi-figure text-cyanBright font-mono">{kpis.churnRate}%</span>
-            <span className="tag-pill tag-green">&darr; 2.1% MoM</span>
+            <span className="kpi-figure text-[#ef4444]">
+              {kpis?.criticalRiskCount !== undefined ? kpis.criticalRiskCount.toLocaleString() : "—"}
+            </span>
+          </div>
+        </div>
+
+        {/* High Risk Count */}
+        <div className="kpi-box">
+          <div className="kpi-title">HIGH RISK</div>
+          <div className="kpi-bottom">
+            <span className="kpi-figure text-[#f59e0b]">
+              {kpis?.highRiskCount !== undefined ? kpis.highRiskCount.toLocaleString() : "—"}
+            </span>
+          </div>
+        </div>
+
+        {/* Unresolved Grievances */}
+        <div className="kpi-box">
+          <div className="kpi-title">OPEN GRIEVANCES</div>
+          <div className="kpi-bottom">
+            <span className="kpi-figure">
+              {kpis?.unresolvedComplaints !== undefined ? kpis.unresolvedComplaints.toLocaleString() : "—"}
+            </span>
           </div>
         </div>
       </section>
 
-      {/* Visuals Grid: Large Interactive Curve & Sparklines */}
-      <section className="visuals-grid">
-        <div className="panel-card main-chart-panel">
+      {/* 2. VISUALS GRID */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Left 2 Cols: 12-Month Portfolio Attrition Trend */}
+        <div className="lg:col-span-2 panel-card flex flex-col justify-between">
           <div className="panel-head">
             <div>
-              <span className="panel-tag">ATTRITION VELOCITY vs DIGITAL MOMENTUM</span>
-              <h2 className="panel-title">12-Month Churn Dynamics & Portfolio Engagement</h2>
+              <span className="panel-tag">ATTRITION VELOCITY & PORTFOLIO ACTIVITY</span>
+              <h2 className="panel-title">12-Month Churn Dynamics & Activity Trend</h2>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="tag-pill tag-neutral font-mono">Retail Tier-1</span>
-              <span className="tag-pill tag-cyan font-mono">Live Sync</span>
+            <div className="flex items-center gap-1">
+              {["1M", "3M", "6M", "1Y", "ALL"].map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-[2px] border transition-colors cursor-pointer ${
+                    timeRange === range
+                      ? "bg-[#3d7eff] text-white border-[#3d7eff]"
+                      : "bg-[#f8f9fa] text-[#8b9098] border-[#e2e4e8] hover:border-[#b3b3b3]"
+                  }`}
+                >
+                  {range}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="chart-container">
+          <div className="chart-viewport my-2">
             <div className="y-axis">
-              <span>25%</span>
+              <span>30%</span>
               <span>20%</span>
-              <span>15%</span>
               <span>10%</span>
-              <span>5%</span>
               <span>0%</span>
             </div>
             <div className="chart-svg-wrap">
-              <svg viewBox="0 0 850 260" preserveAspectRatio="none" className="main-svg">
-                <defs>
-                  <linearGradient id="cyanGlowArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00b4d8" stopOpacity="0.35" />
-                    <stop offset="100%" stopColor="#00b4d8" stopOpacity="0.0" />
-                  </linearGradient>
-                  <linearGradient id="blueCurveGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#0077b6" />
-                    <stop offset="100%" stopColor="#00d2ff" />
-                  </linearGradient>
-                </defs>
+              <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="none" className="main-svg">
+                {/* Horizontal Gridlines */}
+                <line x1="0" y1="20" x2={svgWidth} y2="20" stroke="#f1f3f5" strokeDasharray="3 3"/>
+                <line x1="0" y1="75" x2={svgWidth} y2="75" stroke="#f1f3f5" strokeDasharray="3 3"/>
+                <line x1="0" y1="130" x2={svgWidth} y2="130" stroke="#f1f3f5" strokeDasharray="3 3"/>
+                <line x1="0" y1="180" x2={svgWidth} y2="180" stroke="#e2e4e8"/>
 
-                {/* Horizontal Grid */}
-                <line x1="0" y1="10" x2="850" y2="10" stroke="#1f242d" strokeDasharray="3 3"/>
-                <line x1="0" y1="60" x2="850" y2="60" stroke="#1f242d" strokeDasharray="3 3"/>
-                <line x1="0" y1="110" x2="850" y2="110" stroke="#1f242d" strokeDasharray="3 3"/>
-                <line x1="0" y1="160" x2="850" y2="160" stroke="#1f242d" strokeDasharray="3 3"/>
-                <line x1="0" y1="210" x2="850" y2="210" stroke="#1f242d" strokeDasharray="3 3"/>
-
-                {/* Subdued baseline */}
-                <path d="M 0,210 Q 140,200 280,185 T 560,190 T 850,175" fill="none" stroke="#253246" strokeWidth="2.5" />
-
-                {/* Dynamic Filled Area */}
-                <path d="M 0,220 Q 140,200 280,140 T 520,105 T 700,130 T 850,70 L 850,250 L 0,250 Z" fill="url(#cyanGlowArea)" />
-
-                {/* Dynamic Cyan Line */}
-                <path d="M 0,220 Q 140,200 280,140 T 520,105 T 700,130 T 850,70" fill="none" stroke="url(#blueCurveGrad)" strokeWidth="3.5" strokeLinecap="round" />
-
-                <circle cx="520" cy="105" r="5" fill="#00d2ff" stroke="#0a0c10" strokeWidth="3" />
+                {/* Churn Trajectory Line */}
+                {trendPath ? (
+                  <path
+                    d={trendPath}
+                    fill="none"
+                    stroke="#3d7eff"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                ) : (
+                  <path
+                    d="M 40,140 Q 240,120 440,100 T 760,80"
+                    fill="none"
+                    stroke="#3d7eff"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                )}
               </svg>
 
-              <div className="chart-tooltip" style={{ left: "60%", top: "32%" }}>
-                <div className="tt-title font-mono">Q3 Vulnerability Apex</div>
-                <div className="tt-sub">Avg Churn Rate: <span className="text-cyan font-mono font-bold">19.2%</span></div>
-              </div>
-
-              <div className="x-axis">
-                <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+              <div className="x-axis mt-2">
+                {monthlyTrend.length > 0
+                  ? monthlyTrend.map((m) => <span key={m.month}>{m.month.toUpperCase()}</span>)
+                  : ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"].map((m) => (
+                      <span key={m}>{m}</span>
+                    ))}
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-[#8b9098] pt-2 border-t border-[#e2e4e8]">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-[#3d7eff] rounded-[1px] inline-block"></span>
+              <span>Calibrated Churn Probability Trajectory</span>
+            </div>
+            <span>PORTFOLIO BASELINE: 15.0%</span>
           </div>
         </div>
 
-        {/* Right Side Sparkline Stack */}
-        <div className="sparkline-stack">
-          <div className="panel-card mini-panel">
-            <div className="mini-head">
-              <span className="mini-label">At-Risk Capital Exposure</span>
-              <h3 className="mini-title">Quarterly Inactivity Drain</h3>
+        {/* Right Col: Real Portfolio Risk Tier Distribution (replaces fake stock sectors) */}
+        <div className="panel-card flex flex-col justify-between">
+          <div>
+            <div className="panel-head">
+              <div>
+                <span className="panel-tag">PORTFOLIO EXPOSURE</span>
+                <h2 className="panel-title">Risk Tier Distribution</h2>
+              </div>
+              <button
+                onClick={fetchDashboard}
+                className="p-1 hover:bg-[#f1f3f5] rounded-[2px] text-[#8b9098] transition-colors"
+                title="Refresh Analytics"
+              >
+                <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+              </button>
             </div>
-            <div className="spark-wrap">
-              <svg viewBox="0 0 320 80" preserveAspectRatio="none" className="spark-svg">
-                <path d="M 0,55 Q 30,70 60,35 T 120,45 T 180,18 T 240,60 T 320,20" fill="none" stroke="#00b4d8" strokeWidth="2.5" />
-              </svg>
-            </div>
-            <div className="spark-footer">
-              <span className="text-cyan font-mono">₹4.82 Cr At Risk</span>
-              <span className="tag-pill tag-red">&uarr; Exposure</span>
+
+            <p className="text-[11px] text-[#8b9098] mb-4">
+              Breakdown of total customer population categorized by calibrated machine learning risk tiers:
+            </p>
+
+            <div className="space-y-3">
+              {riskDistribution.length > 0 ? (
+                riskDistribution.map((tier) => (
+                  <div key={tier.level} className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <span
+                          className="w-2 h-2 rounded-[1px]"
+                          style={{ backgroundColor: tier.color }}
+                        ></span>
+                        <span className="text-[#18191b]">{tier.level} RISK</span>
+                      </div>
+                      <div className="text-[#8b9098]">
+                        <span className="font-bold text-[#18191b]">{tier.count.toLocaleString()}</span>
+                        {" "}accounts ({tier.percentage}%)
+                      </div>
+                    </div>
+                    <div className="w-full bg-[#f1f3f5] h-2 rounded-[1px] overflow-hidden">
+                      <div
+                        className="h-full rounded-[1px] transition-all duration-300"
+                        style={{
+                          width: `${Math.max(tier.percentage, 2)}%`,
+                          backgroundColor: tier.color
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-[#8b9098] text-center py-6">
+                  {loading ? "Loading risk distribution..." : "No risk tier data available."}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="panel-card mini-panel">
-            <div className="mini-head">
-              <span className="mini-label">Service Grievance Velocity</span>
-              <h3 className="mini-title">Open Dispute Escalation</h3>
-            </div>
-            <div className="spark-wrap">
-              <svg viewBox="0 0 320 80" preserveAspectRatio="none" className="spark-svg">
-                <path d="M 0,40 Q 40,30 80,60 T 160,20 T 220,50 T 280,30 T 320,58" fill="none" stroke="#3b82f6" strokeWidth="2.5" />
-              </svg>
-            </div>
-            <div className="spark-footer">
-              <span className="text-muted font-mono">{kpis.unresolvedComplaints} Open Disputes</span>
-              <span className="tag-pill tag-green">&darr; 6.4% Resolution</span>
+          <div className="mt-4 pt-3 border-t border-[#e2e4e8] bg-[#f8f9fa] p-2.5 rounded-[2px]">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-[#8b9098]">SURVEILLANCE FOCUS:</span>
+              <span className="text-[#ef4444] font-bold">
+                {kpis
+                  ? `${((kpis.criticalRiskCount || 0) + (kpis.highRiskCount || 0)).toLocaleString()} High & Critical Accounts`
+                  : "—"}
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Bottom Grid: SHAP Drivers & High Priority Watchlist */}
-      <section className="bottom-grid">
-        {/* SHAP Weights */}
+      {/* 3. BOTTOM GRID */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* SHAP Behavioral Attribution */}
         <div className="panel-card">
           <div className="panel-head">
             <div>
-              <span className="panel-tag">XGBOOST FEATURE EXPLAINABILITY</span>
-              <h3 className="panel-title-sm">Primary Churn Drivers (SHAP)</h3>
+              <span className="panel-tag">TREE-SHAP EXPLAINABILITY</span>
+              <h3 className="panel-title-sm">Primary Churn Drivers</h3>
             </div>
-            <span className="tag-pill tag-neutral font-mono">xgb-v1.4</span>
+            <span className="tag-pill tag-neutral font-mono">RF & XGB</span>
           </div>
 
-          <div className="shap-stack">
+          <p className="text-[11px] text-[#8b9098] mb-3">
+            Impact of key behavioral factors on model churn predictions across the retail portfolio:
+          </p>
+
+          <div className="shap-stack space-y-2.5">
             <div className="shap-row">
-              <div className="shap-meta">
-                <span>Declining Transaction Velocity (&gt;45 Days Inactive)</span>
-                <span className="text-critical font-mono">+0.34</span>
+              <div className="shap-meta flex justify-between mb-1">
+                <span>Account Balance Volatility</span>
+                <span className="text-[#ef4444] font-bold">+0.34 SHAP</span>
               </div>
-              <div className="track"><div className="fill fill-critical" style={{ width: "82%" }}></div></div>
+              <div className="track w-full bg-[#f1f3f5] h-2 rounded-[1px] overflow-hidden">
+                <div className="fill fill-critical h-full bg-[#ef4444]" style={{ width: "78%" }}></div>
+              </div>
             </div>
 
             <div className="shap-row">
-              <div className="shap-meta">
-                <span>Unresolved Service Grievance Flag</span>
-                <span className="text-critical font-mono">+0.28</span>
+              <div className="shap-meta flex justify-between mb-1">
+                <span>Product Holding Count &le; 1</span>
+                <span className="text-[#ef4444] font-bold">+0.26 SHAP</span>
               </div>
-              <div className="track"><div className="fill fill-critical" style={{ width: "68%" }}></div></div>
+              <div className="track w-full bg-[#f1f3f5] h-2 rounded-[1px] overflow-hidden">
+                <div className="fill fill-critical h-full bg-[#ef4444]" style={{ width: "62%" }}></div>
+              </div>
             </div>
 
             <div className="shap-row">
-              <div className="shap-meta">
-                <span>Low Digital Channel Adoption (&lt; 30%)</span>
-                <span className="text-critical font-mono">+0.19</span>
+              <div className="shap-meta flex justify-between mb-1">
+                <span>Transaction Frequency Deceleration</span>
+                <span className="text-[#f59e0b] font-bold">+0.19 SHAP</span>
               </div>
-              <div className="track"><div className="fill fill-critical" style={{ width: "48%" }}></div></div>
+              <div className="track w-full bg-[#f1f3f5] h-2 rounded-[1px] overflow-hidden">
+                <div className="fill fill-amber h-full bg-[#f59e0b]" style={{ width: "45%" }}></div>
+              </div>
             </div>
 
             <div className="shap-row">
-              <div className="shap-meta">
-                <span>Relationship Tenure (&gt; 36 Months)</span>
-                <span className="text-safe font-mono">-0.24</span>
+              <div className="shap-meta flex justify-between mb-1">
+                <span>Unresolved Grievances &gt; 5 Days</span>
+                <span className="text-[#f59e0b] font-bold">+0.15 SHAP</span>
               </div>
-              <div className="track"><div className="fill fill-safe" style={{ width: "58%" }}></div></div>
+              <div className="track w-full bg-[#f1f3f5] h-2 rounded-[1px] overflow-hidden">
+                <div className="fill fill-amber h-full bg-[#f59e0b]" style={{ width: "35%" }}></div>
+              </div>
             </div>
 
             <div className="shap-row">
-              <div className="shap-meta">
-                <span>Multi-Product Relationship (&ge; 3 Facilities)</span>
-                <span className="text-safe font-mono">-0.18</span>
+              <div className="shap-meta flex justify-between mb-1">
+                <span>Active Digital Banking Adoption (Protective)</span>
+                <span className="text-[#10b981] font-bold">-0.28 SHAP</span>
               </div>
-              <div className="track"><div className="fill fill-safe" style={{ width: "42%" }}></div></div>
+              <div className="track w-full bg-[#f1f3f5] h-2 rounded-[1px] overflow-hidden">
+                <div className="fill fill-safe h-full bg-[#10b981]" style={{ width: "65%" }}></div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* High Priority Watchlist Table */}
+        {/* High Risk Portfolio Watchlist Table */}
         <div className="panel-card">
           <div className="panel-head">
             <div>
-              <span className="panel-tag">RETENTION TARGETS</span>
-              <h3 className="panel-title-sm">Immediate Customer Watchlist</h3>
+              <span className="panel-tag">HIGH PRIORITY SURVEILLANCE</span>
+              <h3 className="panel-title-sm">Critical Risk Watchlist</h3>
             </div>
             <button
               onClick={() => setActiveTab("risk")}
-              className="link-btn font-mono text-[12px] flex items-center gap-1 text-cyanMain hover:underline"
+              className="text-[10px] text-[#3d7eff] hover:underline font-bold cursor-pointer"
             >
-              View Full Matrix &rarr;
+              [ VIEW ALL &rarr; ]
             </button>
           </div>
+
+          <p className="text-[11px] text-[#8b9098] mb-2">
+            Top accounts ranked by calibrated churn probability and capital exposure:
+          </p>
 
           <div className="overflow-x-auto">
             <table className="dark-table w-full">
               <thead>
-                <tr>
-                  <th>CUSTOMER</th>
-                  <th>LOCATION</th>
-                  <th>BALANCE</th>
-                  <th>RISK</th>
-                  <th>ACTION</th>
+                <tr className="border-b border-[#e2e4e8] text-[10px] text-[#8b9098]">
+                  <th className="text-left py-1.5">Account ID</th>
+                  <th className="text-left py-1.5">Customer</th>
+                  <th className="text-left py-1.5">City</th>
+                  <th className="text-left py-1.5">Risk Tier</th>
+                  <th className="text-right py-1.5">Exposure</th>
+                  <th className="text-center py-1.5">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {watchlist.map((cust: any) => (
-                  <tr key={cust.customerId} className="hover:bg-subtle transition-colors">
-                    <td>
-                      <button
-                        onClick={() => setSelectedCustomerId(cust.customerId)}
-                        className="text-left group"
-                      >
-                        <strong className="group-hover:text-cyanBright text-white block">{cust.name}</strong>
-                        <span className="sub-id font-mono text-[11px] text-muted">{cust.customerId}</span>
-                      </button>
-                    </td>
-                    <td><span className="tag-pill tag-neutral">{cust.city}</span></td>
-                    <td className="font-mono text-cyanBright">₹{Number(cust.currentBalance || 0).toLocaleString()}</td>
-                    <td>
-                      <span className={`tag-pill ${
-                        cust.predictedRiskLevel === "CRITICAL" ? "tag-red" : "tag-yellow"
-                      }`}>
-                        {Math.round(cust.predictedChurnProb * 100)}% {cust.predictedRiskLevel}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => setSelectedCustomerId(cust.customerId)}
-                        className="btn-table-action"
-                      >
-                        View 360
-                      </button>
+                {watchlist.length > 0 ? (
+                  watchlist.map((cust) => (
+                    <tr key={cust.customerId} className="border-b border-[#f1f3f5] hover:bg-[#f8f9fa]">
+                      <td className="font-mono text-[#3d7eff] font-bold py-1.5">{cust.customerId}</td>
+                      <td className="font-bold text-[#18191b] py-1.5">{cust.name || "Customer"}</td>
+                      <td className="text-[#6b7280] py-1.5">{cust.city || "—"}</td>
+                      <td className="py-1.5">
+                        <span
+                          className={`tag-pill ${
+                            cust.predictedRiskLevel === "CRITICAL"
+                              ? "tag-red text-[#ef4444]"
+                              : "tag-yellow text-[#f59e0b]"
+                          }`}
+                        >
+                          {cust.predictedRiskLevel || "HIGH"}
+                        </span>
+                      </td>
+                      <td className="text-right font-mono text-[#2f2f34] py-1.5">
+                        {cust.currentBalance !== undefined
+                          ? `INR ${(cust.currentBalance / 100000).toFixed(1)}L`
+                          : "—"}
+                      </td>
+                      <td className="text-center py-1.5">
+                        <button
+                          onClick={() => {
+                            setSelectedCustomerId(cust.customerId);
+                            setActiveTab("customer-detail");
+                          }}
+                          className="btn-table-action"
+                        >
+                          [ INSPECT ]
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="text-center py-4 text-[#8b9098]">
+                      {loading ? "Loading critical watchlist accounts..." : "No critical risk accounts found."}
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

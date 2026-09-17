@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const api = axios.create({
   baseURL: "/api",
-  timeout: 25000,
+  timeout: 15000,
   headers: {
     "Content-Type": "application/json"
   }
@@ -21,13 +21,13 @@ api.interceptors.request.use(async (config) => {
         const res = await axios.post("/api/auth/login", {
           email: "admin@bank.com",
           password: "Admin@123"
-        });
-        token = res.data.accessToken;
+        }, { timeout: 5000 });
+        token = res.data?.accessToken;
         if (token) {
           localStorage.setItem("aegis_access_token", token);
         }
       } catch (err) {
-        console.warn("Initial authentication fallback:", err);
+        // Fallback for offline or standalone evaluation
       } finally {
         isRefreshing = false;
       }
@@ -50,8 +50,8 @@ api.interceptors.response.use(
         const res = await axios.post("/api/auth/login", {
           email: "admin@bank.com",
           password: "Admin@123"
-        });
-        const token = res.data.accessToken;
+        }, { timeout: 5000 });
+        const token = res.data?.accessToken;
         if (token) {
           localStorage.setItem("aegis_access_token", token);
           originalRequest.headers.Authorization = `Bearer ${token}`;

@@ -4,436 +4,623 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
-  ChevronRight,
-  Globe,
-  ShieldCheck,
-  TrendingDown,
-  Sparkles,
-  BarChart3,
+  ShieldAlert,
   Sliders,
   Users,
-  CheckCircle2,
-  Lock,
-  Zap,
-  Layers,
-  ArrowUpRight,
+  ArrowRight,
+  BarChart2,
+  TrendingDown,
   Activity,
-  Cpu,
-  AlertTriangle
+  CheckCircle2,
+  Layers,
+  Sparkles,
+  Zap,
+  ChevronRight,
+  ExternalLink
 } from "lucide-react";
-import { useAuthStore, DEMO_PROFILES } from "../stores/authStore";
+import { CmdLogo } from "@/components/CmdLogo";
+import { useAuthStore } from "@/stores/authStore";
 
 export default function LandingPage() {
   const router = useRouter();
   const { loginDemoProfile } = useAuthStore();
-  const [langDropdown, setLangDropdown] = useState(false);
-  const [selectedLang, setSelectedLang] = useState("English");
-  const [activeDemoPill, setActiveDemoPill] = useState<string | null>(null);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
+  const [simulatedIntervention, setSimulatedIntervention] = useState(false);
+  const [activeTab, setActiveTab] = useState<"shap" | "segments" | "simulator">("shap");
 
   const demoRoles = [
-    { key: "Risk Analyst", label: "Risk Analyst", role: "ANALYST", subtitle: "SHAP Explainability & Risk Watchlist" },
-    { key: "Branch Manager", label: "Branch Manager", role: "MANAGER", subtitle: "Branch Retention & Interventions" },
-    { key: "Chief Risk Officer", label: "Chief Risk Officer", role: "ADMIN", subtitle: "Executive Portfolio & Governance" },
-    { key: "Compliance Officer", label: "Compliance Officer", role: "ADMIN", subtitle: "Audit Logs & Model Governance" },
+    {
+      key: "Chief Risk Officer",
+      name: "Arjun Kapoor",
+      badge: "ADMIN",
+      role: "Executive Portfolio & Governance",
+      avatar: "AK",
+      color: "bg-[#3d7eff] text-white",
+    },
+    {
+      key: "Risk Analyst",
+      name: "Priya Sharma",
+      badge: "ANALYST",
+      role: "SHAP Explainability & Risk Watchlists",
+      avatar: "PS",
+      color: "bg-[#10b981] text-white",
+    },
+    {
+      key: "Branch Manager",
+      name: "Vikram Mehta",
+      badge: "MANAGER",
+      role: "Branch Retention & Customer Outreach",
+      avatar: "VM",
+      color: "bg-[#f59e0b] text-white",
+    },
+    {
+      key: "Compliance Officer",
+      name: "Ananya Deshmukh",
+      badge: "ADMIN",
+      role: "Model Audit Trail & Fair Lending Logs",
+      avatar: "AD",
+      color: "bg-[#8b5cf6] text-white",
+    },
   ];
 
-  const handleLaunchDemo = async (roleKey: string) => {
-    setActiveDemoPill(roleKey);
+  const handleLaunchRole = async (roleKey: string) => {
+    setActiveRole(roleKey);
     await loginDemoProfile(roleKey);
     setTimeout(() => {
       router.push("/workspace");
-    }, 350);
+    }, 250);
   };
 
+  // 12-Month Baseline Churn Curve vs Intervened Churn Curve
+  const baselineMonths = [
+    { month: "Jan", rate: 14.2 },
+    { month: "Feb", rate: 15.1 },
+    { month: "Mar", rate: 14.8 },
+    { month: "Apr", rate: 16.0 },
+    { month: "May", rate: 15.5 },
+    { month: "Jun", rate: 17.2 },
+    { month: "Jul", rate: 18.4 },
+    { month: "Aug", rate: 19.2 },
+    { month: "Sep", rate: 18.1 },
+    { month: "Oct", rate: 16.5 },
+    { month: "Nov", rate: 15.8 },
+    { month: "Dec", rate: 15.0 },
+  ];
+
+  const intervenedMonths = [
+    { month: "Jan", rate: 14.2 },
+    { month: "Feb", rate: 14.8 },
+    { month: "Mar", rate: 13.9 },
+    { month: "Apr", rate: 13.5 },
+    { month: "May", rate: 12.8 },
+    { month: "Jun", rate: 12.1 },
+    { month: "Jul", rate: 11.4 },
+    { month: "Aug", rate: 10.8 },
+    { month: "Sep", rate: 10.2 },
+    { month: "Oct", rate: 9.8 },
+    { month: "Nov", rate: 9.5 },
+    { month: "Dec", rate: 9.2 },
+  ];
+
+  const currentPoints = simulatedIntervention ? intervenedMonths : baselineMonths;
+  const svgWidth = 600;
+  const svgHeight = 160;
+  const paddingX = 30;
+  const paddingY = 20;
+
+  const pathD = currentPoints
+    .map((p, idx) => {
+      const x = paddingX + (idx / (currentPoints.length - 1)) * (svgWidth - paddingX * 2);
+      const y = svgHeight - paddingY - ((p.rate - 8) / (22 - 8)) * (svgHeight - paddingY * 2);
+      return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
+    })
+    .join(" ");
+
+  const areaD = `${pathD} L ${svgWidth - paddingX} ${svgHeight - paddingY} L ${paddingX} ${svgHeight - paddingY} Z`;
+
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-[#f8fafc] font-sans selection:bg-[#00d2ff] selection:text-black relative overflow-x-hidden">
-      {/* High-tech ambient cyan & electric blue grid glow */}
-      <div className="absolute top-[-100px] right-[-100px] w-[700px] h-[700px] bg-gradient-to-bl from-[#00b4d8]/15 via-[#0077b6]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-[450px] left-[-150px] w-[600px] h-[600px] bg-gradient-to-tr from-[#00d2ff]/10 via-[#0a0c10] to-transparent rounded-full blur-3xl pointer-events-none" />
-      
-      {/* Subtle telemetry grid background overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: "linear-gradient(#00d2ff 1px, transparent 1px), linear-gradient(90deg, #00d2ff 1px, transparent 1px)",
-          backgroundSize: "40px 40px"
-        }}
-      />
-
-      {/* TOP NAVIGATION */}
-      <header className="w-full max-w-7xl mx-auto px-6 sm:px-8 py-5 flex items-center justify-between z-20 relative border-b border-[#1d232c]/60">
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-[#141820] border border-[#00b4d8]/40 flex items-center justify-center text-[#00d2ff] shadow-[0_0_15px_rgba(0,210,255,0.2)] group-hover:border-[#00d2ff] transition-all">
-            <ShieldCheck size={20} />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-extrabold tracking-wider uppercase text-white font-sans">
-              Aegis<span className="text-[#00b4d8]">Risk</span>
-            </span>
-          </div>
-        </Link>
-
-        {/* Center Nav Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[#94a3b8]">
-          <a href="#how-it-works" className="hover:text-[#00d2ff] transition-colors">How it works</a>
-          <a href="#capabilities" className="hover:text-[#00d2ff] transition-colors">Risk Engine</a>
-          <a href="#governance" className="hover:text-[#00d2ff] transition-colors">Trust & Governance</a>
-        </nav>
-
-        {/* Right Nav Actions */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Language Selector */}
-          <div className="relative hidden sm:block">
-            <button
-              type="button"
-              onClick={() => setLangDropdown(!langDropdown)}
-              className="flex items-center gap-1.5 text-xs text-[#94a3b8] hover:text-white font-semibold px-2.5 py-1.5 rounded-lg bg-[#141820] border border-[#1d232c] hover:border-[#27303d] transition-colors"
-            >
-              <Globe size={14} className="text-[#00b4d8]" />
-              <span>{selectedLang}</span>
-              <span className="text-[10px] text-[#64748b]">▼</span>
-            </button>
-            {langDropdown && (
-              <div className="absolute right-0 mt-1.5 w-36 bg-[#141820] rounded-xl shadow-2xl border border-[#27303d] py-1.5 z-30 text-xs font-medium">
-                {["English", "Hindi (हिंदी)", "Marathi (मराठी)"].map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => { setSelectedLang(l.split(" ")[0]); setLangDropdown(false); }}
-                    className="w-full text-left px-3.5 py-2 hover:bg-[#1c222c] text-[#94a3b8] hover:text-[#00d2ff]"
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Sign In link */}
-          <Link
-            href="/login"
-            className="text-xs sm:text-sm font-semibold text-[#94a3b8] hover:text-white px-2.5 py-1.5 transition-colors"
-          >
-            Sign in
-          </Link>
-
-          {/* Open Platform CTA */}
-          <button
-            onClick={() => handleLaunchDemo("Risk Analyst")}
-            className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#00b4d8] hover:bg-[#00d2ff] active:scale-95 text-black font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(0,180,216,0.3)] cursor-pointer"
-          >
-            <span>Open platform</span>
-            <ArrowRight size={14} />
-          </button>
-        </div>
-      </header>
-
-      {/* HERO SECTION */}
-      <section className="w-full max-w-7xl mx-auto px-6 sm:px-8 pt-10 sm:pt-16 pb-16 sm:pb-24 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center z-10 relative">
-        {/* Left Column: Typography & CTAs */}
-        <div className="lg:col-span-7 flex flex-col items-start pr-0 lg:pr-6">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#00b4d8]/10 border border-[#00b4d8]/30 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#00d2ff] mb-6 shadow-[0_0_15px_rgba(0,210,255,0.1)]">
-            <span className="w-2 h-2 rounded-full bg-[#00d2ff] animate-pulse" />
-            <span>AI Risk Intelligence for Enterprise Banking</span>
-          </div>
-
-          {/* Big Editorial Headline */}
-          <h1 className="text-4xl sm:text-6xl md:text-[68px] font-extrabold tracking-tight text-white leading-[1.08] mb-6">
-            Know the risk.
-            <br />
-            <span
-              className="text-[#00d2ff] italic font-normal tracking-normal block mt-1 sm:mt-2"
-              style={{ fontFamily: "'Newsreader', 'Instrument Serif', Georgia, serif" }}
-            >
-              Retain with confidence.
-            </span>
-          </h1>
-
-          {/* Description */}
-          <p className="text-base sm:text-lg text-[#94a3b8] leading-relaxed max-w-xl mb-8 sm:mb-10 font-normal">
-            AegisRisk empowers tier-1 banks, risk analysts, and branch managers to discover impending customer churn signals, explain behavioral drivers via SHAP AI, and trigger automated Gemini AI retention workflows.
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 mb-10 sm:mb-12">
-            {/* Primary Cyan Glow Button */}
-            <button
-              onClick={() => handleLaunchDemo("Risk Analyst")}
-              className="px-6 py-3.5 rounded-full bg-[#00b4d8] hover:bg-[#00d2ff] active:scale-95 text-black font-extrabold text-sm sm:text-base flex items-center gap-2.5 transition-all shadow-[0_0_30px_rgba(0,210,255,0.4)] cursor-pointer"
-            >
-              <span>Explore your portfolio</span>
-              <ArrowRight size={17} />
-            </button>
-
-            {/* Secondary Text Link */}
-            <a
-              href="#how-it-works"
-              className="inline-flex items-center gap-1.5 text-sm sm:text-base font-semibold text-[#f8fafc] hover:text-[#00d2ff] transition-colors py-2"
-            >
-              <span>See how AegisRisk works</span>
-              <ChevronRight size={17} />
-            </a>
-          </div>
-
-          {/* Social Proof Row */}
-          <div className="flex items-center gap-3 pt-2">
-            <div className="flex -space-x-2 overflow-hidden">
-              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#1c222c] text-[#00d2ff] font-bold text-xs border-2 border-[#0a0c10]">R</div>
-              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#0077b6] text-white font-bold text-xs border-2 border-[#0a0c10]">S</div>
-              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#141820] text-[#10b981] font-bold text-xs border-2 border-[#0a0c10]">A</div>
-              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#00b4d8] text-black font-bold text-xs border-2 border-[#0a0c10]">+</div>
-            </div>
-            <span className="text-xs sm:text-sm text-[#94a3b8] font-medium">
-              Calibrated for 50,000+ accounts, risk teams & branch leaders
-            </span>
-          </div>
-        </div>
-
-        {/* Right Column: Signature Arch & Floating Badges */}
-        <div className="lg:col-span-5 relative flex justify-center items-center mt-6 lg:mt-0">
-          {/* Concentric Neon Rings behind Arch */}
-          <div className="absolute w-[440px] h-[440px] sm:w-[500px] h-[500px] rounded-full border border-dashed border-[#00b4d8]/20 pointer-events-none" />
-          <div className="absolute w-[360px] h-[360px] sm:w-[420px] h-[420px] rounded-full border border-dashed border-[#00b4d8]/15 pointer-events-none" />
-
-          {/* TOP FLOATING CARD */}
-          <div className="absolute -top-4 sm:-top-6 left-0 sm:-left-6 z-20 bg-[#141820]/95 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 shadow-[0_12px_35px_rgba(0,0,0,0.6)] border border-[#27303d] flex items-center gap-3.5 max-w-[240px] sm:max-w-[260px] animate-bounce-subtle">
-            <div className="w-10 h-10 rounded-xl bg-[#f59e0b]/15 border border-[#f59e0b]/40 flex items-center justify-center text-[#f59e0b] shrink-0">
-              <BarChart3 size={20} />
-            </div>
-            <div>
-              <div className="text-[10px] sm:text-[11px] font-medium text-[#94a3b8]">Today's risk signal</div>
-              <div className="text-xs sm:text-sm font-bold text-white leading-snug">Review within 24-48 hrs</div>
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#ef4444] flex items-center gap-0.5 mt-0.5">
-                <span>↑ 14.8% projected churn</span>
-              </div>
+    <div className="min-h-screen bg-[#f8f9fa] text-[#1e293b] font-sans selection:bg-[#3d7eff] selection:text-white flex flex-col justify-between">
+      {/* 1. MINIMALIST TOP NAV */}
+      <header className="w-full bg-[#ffffff] border-b border-[#e2e4e8] sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <CmdLogo size="md" showSubtitle={true} />
+            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-[#f1f5f9] border border-[#e2e8f0] rounded-md text-[11px] font-mono text-[#64748b]">
+              <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></span>
+              <span>FastAPI Inference Microservice Active</span>
             </div>
           </div>
 
-          {/* SIGNATURE ARCH CONTAINER IN AEGIS DARK THEME */}
-          <div className="w-[300px] sm:w-[350px] h-[420px] sm:h-[480px] rounded-t-[170px] sm:rounded-t-[200px] rounded-b-3xl overflow-hidden bg-gradient-to-b from-[#141820] via-[#0f1217] to-[#0a0c10] relative shadow-[0_20px_50px_rgba(0,180,216,0.15)] border-2 border-[#27303d] hover:border-[#00b4d8]/50 transition-colors flex flex-col justify-between p-5 group">
-            {/* Top Arch Tech Status */}
-            <div className="relative z-10 pt-16 flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-2xl bg-[#00b4d8]/10 border border-[#00b4d8]/30 flex items-center justify-center text-[#00d2ff] mb-3 shadow-[0_0_20px_rgba(0,210,255,0.2)]">
-                <Activity size={24} />
-              </div>
-              <span className="text-[11px] font-mono uppercase tracking-widest text-[#00d2ff]">
-                Live Risk Telemetry
-              </span>
-              <h3 className="text-lg font-bold text-white mt-1">
-                Portfolio Churn Index
-              </h3>
-            </div>
-
-            {/* Radar / Waveform Visual Graphic */}
-            <div className="relative z-10 my-auto py-2">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-mono">
-                  <span className="text-[#94a3b8]">Overall Attrition Risk</span>
-                  <span className="text-[#ef4444] font-bold">14.2% CRITICAL</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-[#1c222c] overflow-hidden p-0.5 border border-[#27303d]">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#00b4d8] via-[#f59e0b] to-[#ef4444] w-[74%] animate-pulse" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-4 pt-2 border-t border-[#1d232c] text-left">
-                  <div className="p-2 rounded-lg bg-[#0a0c10]/80 border border-[#1d232c]">
-                    <div className="text-[10px] text-[#64748b] font-mono">FLAGGED ACCOUNTS</div>
-                    <div className="text-sm font-bold text-white font-mono mt-0.5">14 Customers</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-[#0a0c10]/80 border border-[#1d232c]">
-                    <div className="text-[10px] text-[#64748b] font-mono">RETAINABLE CAPITAL</div>
-                    <div className="text-sm font-bold text-[#10b981] font-mono mt-0.5">₹42.8 Lakhs</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Inner bottom caption badge */}
-            <div className="relative z-10 bg-[#141820]/90 backdrop-blur-md border border-[#27303d] px-3.5 py-2 rounded-xl text-[#f8fafc] flex items-center justify-center gap-2 text-xs font-medium">
-              <Sparkles size={14} className="text-[#00d2ff]" />
-              <span>SHAP Explainability &bull; Real-time ML</span>
-            </div>
-          </div>
-
-          {/* BOTTOM FLOATING CARD */}
-          <div className="absolute -bottom-4 sm:-bottom-6 right-0 sm:-right-6 z-20 bg-[#141820]/95 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 shadow-[0_12px_35px_rgba(0,0,0,0.6)] border border-[#27303d] flex items-center gap-3.5 max-w-[250px] sm:max-w-[270px]">
-            <div className="w-10 h-10 rounded-xl bg-[#10b981]/15 border border-[#10b981]/40 flex items-center justify-center text-[#10b981] shrink-0">
-              <CheckCircle2 size={20} />
-            </div>
-            <div>
-              <div className="text-[10px] sm:text-[11px] font-medium text-[#94a3b8]">Prescriptive retention ready</div>
-              <div className="text-xs sm:text-sm font-bold text-white leading-snug">HNI Fee Waiver + Wealth Advisory</div>
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#10b981] mt-0.5">
-                94% retention fit score
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* QUICK WORKSPACE PREVIEW BANNER (Aegis Dark Theme) */}
-      <section className="w-full bg-[#0f1217] border-y border-[#1d232c] py-5 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#00d2ff] animate-ping" />
-            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
-              Instant Demo Workspaces:
-            </span>
-            <span className="text-xs text-[#94a3b8] hidden sm:inline">
-              1-click test drive directly into any role
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {demoRoles.map((role) => (
-              <button
-                key={role.key}
-                onClick={() => handleLaunchDemo(role.key)}
-                className="px-3.5 py-1.5 rounded-lg bg-[#141820] hover:bg-[#1c222c] border border-[#27303d] hover:border-[#00b4d8] text-xs font-semibold text-[#f8fafc] transition-all flex items-center gap-1.5 shadow-sm group cursor-pointer"
-              >
-                <span>{role.label}</span>
-                <ArrowUpRight size={13} className="text-[#64748b] group-hover:text-[#00d2ff] transition-colors" />
-              </button>
-            ))}
+          <div className="flex items-center gap-3 font-mono text-xs">
             <Link
               href="/login"
-              className="px-3.5 py-1.5 rounded-lg bg-[#00b4d8] text-black text-xs font-bold hover:bg-[#00d2ff] transition-colors shadow-sm"
+              className="px-3.5 py-2 text-[#475569] hover:text-[#1e293b] hover:bg-[#f1f5f9] rounded-md transition-all font-semibold"
             >
-              Sign In Form →
+              Sign In
+            </Link>
+            <Link
+              href="/workspace"
+              className="px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-md transition-all font-bold flex items-center gap-1.5 shadow-sm"
+            >
+              <span>Launch Workspace</span>
+              <ArrowRight size={13} />
             </Link>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* HOW IT WORKS SECTION */}
-      <section id="how-it-works" className="w-full max-w-7xl mx-auto px-6 sm:px-8 py-20">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="text-xs font-extrabold uppercase tracking-widest text-[#00b4d8] mb-2 font-mono">
-            Architecture Pipeline
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-            How AegisRisk Safeguards Customer Portfolios
-          </h2>
-          <p className="text-[#94a3b8] text-sm sm:text-base mt-3">
-            Predict customer attrition months in advance with full behavioral explainability and GenAI interventions.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-[#141820] rounded-2xl p-7 border border-[#1d232c] hover:border-[#27303d] transition-all shadow-md">
-            <div className="w-12 h-12 rounded-xl bg-[#00b4d8]/10 border border-[#00b4d8]/30 text-[#00d2ff] flex items-center justify-center font-bold text-lg mb-5 font-mono">
-              01
+      {/* 2. HERO SECTION: VALUE PROP + INTERACTIVE TELEMETRY PREVIEW */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-12 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left Column: Core Value Proposition */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#eff6ff] border border-[#bfdbfe] rounded-full text-xs font-mono font-bold text-[#1d4ed8]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
+              <span>CHURN MODELING & DECISION ENGINE</span>
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">Customer 360 Ingestion</h3>
-            <p className="text-sm text-[#94a3b8] leading-relaxed">
-              Synthesizes real-time deposits, transaction velocities, digital engagement sessions, and grievance tickets into unified feature vectors.
-            </p>
-          </div>
 
-          <div className="bg-[#141820] rounded-2xl p-7 border border-[#1d232c] hover:border-[#27303d] transition-all shadow-md">
-            <div className="w-12 h-12 rounded-xl bg-[#0077b6]/20 border border-[#0077b6]/50 text-[#00b4d8] flex items-center justify-center font-bold text-lg mb-5 font-mono">
-              02
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] tracking-tight leading-[1.15]">
+              Predict Attrition <br className="hidden sm:inline" />
+              <span className="text-[#2563eb]">Before Capital Drainage.</span>
+            </h1>
+
+            <p className="text-sm sm:text-base text-[#475569] leading-relaxed max-w-xl">
+              An institutional analytical engine designed for retail banking. Correlating transaction velocity,
+              unresolved grievances, balance volatility, and tenure into calibrated machine learning predictions
+              with transparent TreeSHAP explainability.
+            </p>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-3 pt-2 font-mono text-xs">
+              <Link
+                href="/workspace"
+                className="px-5 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold rounded-md transition-all flex items-center gap-2 shadow-md shadow-blue-500/20"
+              >
+                <span>EXPLORE RISK WORKSPACE</span>
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                href="/login"
+                className="px-4 py-3 bg-[#ffffff] hover:bg-[#f8fafc] text-[#334155] border border-[#cbd5e1] hover:border-[#94a3b8] font-bold rounded-md transition-all shadow-sm"
+              >
+                <span>DEMO CREDENTIALS</span>
+              </Link>
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">XGBoost & SHAP Engine</h3>
-            <p className="text-sm text-[#94a3b8] leading-relaxed">
-              Evaluates churn propensity across multi-model benchmarks, calculating exact SHAP feature attributions that explain root-cause attrition triggers.
-            </p>
-          </div>
 
-          <div className="bg-[#141820] rounded-2xl p-7 border border-[#1d232c] hover:border-[#27303d] transition-all shadow-md">
-            <div className="w-12 h-12 rounded-xl bg-[#10b981]/15 border border-[#10b981]/40 text-[#10b981] flex items-center justify-center font-bold text-lg mb-5 font-mono">
-              03
-            </div>
-            <h3 className="text-lg font-bold text-white mb-2">Gemini AI Retention</h3>
-            <p className="text-sm text-[#94a3b8] leading-relaxed">
-              Prescribes personalized fee restructuring, relationship manager outreach scripts, and tailored wealth upgrades with quantified recovery scores.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* CAPABILITIES SECTION */}
-      <section id="capabilities" className="w-full bg-[#0f1217] border-t border-[#1d232c] py-20 px-6 sm:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
-            <div>
-              <div className="text-xs font-extrabold uppercase tracking-widest text-[#00b4d8] mb-2 font-mono">
-                Platform Capabilities
+            {/* Metric Ticker Bar */}
+            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-[#e2e8f0] font-mono">
+              <div className="bg-[#ffffff] p-3 rounded-md border border-[#e2e8f0] shadow-sm">
+                <div className="text-[10px] text-[#64748b] font-bold uppercase">Capital Monitored</div>
+                <div className="text-base font-extrabold text-[#0f172a] mt-0.5">INR 482.15 Cr</div>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-                Built for High-Stakes Banking Decisions
-              </h2>
+              <div className="bg-[#ffffff] p-3 rounded-md border border-[#e2e8f0] shadow-sm">
+                <div className="text-[10px] text-[#64748b] font-bold uppercase">Avg Churn Rate</div>
+                <div className="text-base font-extrabold text-[#2563eb] mt-0.5">15.2%</div>
+              </div>
+              <div className="bg-[#ffffff] p-3 rounded-md border border-[#e2e8f0] shadow-sm">
+                <div className="text-[10px] text-[#64748b] font-bold uppercase">Model ROC-AUC</div>
+                <div className="text-base font-extrabold text-[#10b981] mt-0.5">0.884</div>
+              </div>
             </div>
+          </div>
+
+          {/* Right Column: Visual Interactive Analytics Preview (Graphs First!) */}
+          <div className="lg:col-span-6">
+            <div className="bg-[#0f172a] text-[#f8fafc] rounded-xl p-5 border border-[#1e293b] shadow-2xl font-mono space-y-4">
+              {/* Telemetry Window Header */}
+              <div className="flex items-center justify-between border-b border-[#334155] pb-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span>
+                  <span className="text-[#94a3b8] font-bold ml-1 text-[11px]">
+                    cmd.telemetry // 12-MONTH ATTRITION TRAJECTORY
+                  </span>
+                </div>
+                <span className="text-[#38bdf8] text-[10px] font-bold bg-[#0284c7]/20 border border-[#0284c7]/30 px-2 py-0.5 rounded">
+                  {simulatedIntervention ? "PROJECTION: -38.4% RISK" : "BASELINE OBSERVED"}
+                </span>
+              </div>
+
+              {/* Interactive Simulation Toggle */}
+              <div className="flex items-center justify-between bg-[#1e293b] p-2.5 rounded-md text-xs">
+                <span className="text-[#cbd5e1] text-[11px]">
+                  What-If Retention Intervention Simulation:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSimulatedIntervention(!simulatedIntervention)}
+                  className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                    simulatedIntervention
+                      ? "bg-[#10b981] text-white shadow-sm"
+                      : "bg-[#334155] text-[#94a3b8] hover:text-white"
+                  }`}
+                >
+                  {simulatedIntervention ? "[ APPLIED: RM + FEE WAIVER ]" : "[ SIMULATE INTERVENTION ]"}
+                </button>
+              </div>
+
+              {/* SVG Area & Line Chart */}
+              <div className="relative pt-2">
+                <div className="flex justify-between text-[10px] text-[#64748b] mb-1">
+                  <span>RATE: 20%</span>
+                  <span className="text-[#38bdf8] font-bold">
+                    {simulatedIntervention ? "Target Exit: 9.2%" : "Observed Exit: 15.0%"}
+                  </span>
+                </div>
+
+                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-36 overflow-visible">
+                  <defs>
+                    <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Horizontal Grid lines */}
+                  <line x1={paddingX} y1="20" x2={svgWidth - paddingX} y2="20" stroke="#1e293b" strokeDasharray="3 3" />
+                  <line x1={paddingX} y1="70" x2={svgWidth - paddingX} y2="70" stroke="#1e293b" strokeDasharray="3 3" />
+                  <line x1={paddingX} y1="120" x2={svgWidth - paddingX} y2="120" stroke="#1e293b" strokeDasharray="3 3" />
+
+                  {/* Gradient Area Fill */}
+                  <path d={areaD} fill="url(#curveGradient)" />
+
+                  {/* Main Trajectory Line */}
+                  <path
+                    d={pathD}
+                    fill="none"
+                    stroke={simulatedIntervention ? "#10b981" : "#38bdf8"}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="transition-all duration-500"
+                  />
+
+                  {/* Current Active Anchor Dot */}
+                  {currentPoints.map((p, i) => {
+                    const x = paddingX + (i / (currentPoints.length - 1)) * (svgWidth - paddingX * 2);
+                    const y = svgHeight - paddingY - ((p.rate - 8) / (22 - 8)) * (svgHeight - paddingY * 2);
+                    if (i === 7 || i === currentPoints.length - 1) {
+                      return (
+                        <circle
+                          key={i}
+                          cx={x}
+                          cy={y}
+                          r="4"
+                          fill={simulatedIntervention ? "#10b981" : "#38bdf8"}
+                          stroke="#0f172a"
+                          strokeWidth="2"
+                        />
+                      );
+                    }
+                    return null;
+                  })}
+                </svg>
+
+                {/* Month labels */}
+                <div className="flex justify-between text-[9px] text-[#64748b] px-4 pt-1">
+                  {currentPoints.map((p) => (
+                    <span key={p.month}>{p.month}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Risk Distribution Breakdown Bar */}
+              <div className="pt-2 border-t border-[#334155] space-y-1.5 text-[11px]">
+                <div className="flex justify-between text-[#94a3b8]">
+                  <span>PORTFOLIO RISK TIER DISTRIBUTION:</span>
+                  <span className="text-[#f8fafc] font-bold">10,000 MONITORED ACCOUNTS</span>
+                </div>
+                {/* Segmented Bar */}
+                <div className="w-full h-2.5 bg-[#1e293b] rounded flex overflow-hidden">
+                  <div className="bg-[#10b981] h-full" style={{ width: "62%" }} title="Low Risk: 62%"></div>
+                  <div className="bg-[#f59e0b] h-full" style={{ width: "22%" }} title="Medium Risk: 22%"></div>
+                  <div className="bg-[#f97316] h-full" style={{ width: "11%" }} title="High Risk: 11%"></div>
+                  <div className="bg-[#ef4444] h-full" style={{ width: "5%" }} title="Critical Risk: 5%"></div>
+                </div>
+                <div className="flex justify-between text-[10px] text-[#94a3b8] pt-0.5">
+                  <span className="flex items-center gap-1 text-[#10b981]">● Low: 6,200</span>
+                  <span className="flex items-center gap-1 text-[#f59e0b]">● Med: 2,200</span>
+                  <span className="flex items-center gap-1 text-[#f97316]">● High: 1,100</span>
+                  <span className="flex items-center gap-1 text-[#ef4444]">● Critical: 500</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. VISUAL ANALYTICS MODULES: CHARTS & GRAPHS FIRST */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full border-t border-[#e2e8f0]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
+          <div>
+            <div className="text-xs font-mono font-bold text-[#2563eb] uppercase tracking-wider">
+              DATA ANALYTICS CAPABILITIES
+            </div>
+            <h2 className="text-xl font-extrabold text-[#0f172a]">
+              Interactive Machine Learning Modules
+            </h2>
+          </div>
+
+          {/* Module Tabs */}
+          <div className="flex items-center bg-[#ffffff] border border-[#cbd5e1] p-1 rounded-md font-mono text-xs">
             <button
-              onClick={() => handleLaunchDemo("Chief Risk Officer")}
-              className="px-4 py-2 rounded-xl bg-[#00b4d8] text-black text-xs font-extrabold flex items-center gap-2 hover:bg-[#00d2ff] self-start md:self-auto cursor-pointer shadow-[0_0_15px_rgba(0,180,216,0.3)]"
+              onClick={() => setActiveTab("shap")}
+              className={`px-3 py-1.5 rounded transition-all font-bold cursor-pointer ${
+                activeTab === "shap" ? "bg-[#2563eb] text-white shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"
+              }`}
             >
-              <span>Launch CRO Console</span>
-              <ArrowRight size={14} />
+              SHAP Attribution
+            </button>
+            <button
+              onClick={() => setActiveTab("segments")}
+              className={`px-3 py-1.5 rounded transition-all font-bold cursor-pointer ${
+                activeTab === "segments" ? "bg-[#2563eb] text-white shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"
+              }`}
+            >
+              K-Means Clusters
+            </button>
+            <button
+              onClick={() => setActiveTab("simulator")}
+              className={`px-3 py-1.5 rounded transition-all font-bold cursor-pointer ${
+                activeTab === "simulator" ? "bg-[#2563eb] text-white shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"
+              }`}
+            >
+              Retention Simulator
             </button>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-6 rounded-2xl bg-[#141820] border border-[#1d232c] hover:border-[#00b4d8]/40 transition-colors">
-              <Users size={24} className="text-[#00d2ff] mb-4" />
-              <h4 className="font-bold text-white mb-1.5">Customer 360 View</h4>
-              <p className="text-xs text-[#94a3b8] leading-relaxed">
-                Full longitudinal customer accounts with real-time balance velocity and grievance timelines.
-              </p>
-            </div>
+        {/* Dynamic Graphic Card for Selected Tab */}
+        <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-xl p-6 shadow-sm">
+          {activeTab === "shap" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              <div className="lg:col-span-5 space-y-3 font-sans">
+                <div className="text-xs font-mono text-[#2563eb] font-bold">TREE-SHAP EXPLAINABILITY</div>
+                <h3 className="text-lg font-extrabold text-[#0f172a]">
+                  Mathematical Feature Attribution
+                </h3>
+                <p className="text-xs text-[#64748b] leading-relaxed">
+                  Every churn prediction is decomposed into specific Shapley additive values, highlighting
+                  the exact behavioral risk drivers and protective customer assets that determine account stability.
+                </p>
+                <div className="pt-2 font-mono text-xs">
+                  <span className="text-[#ef4444] font-bold">+ Impact:</span> Increases Attrition Risk &nbsp;|&nbsp;
+                  <span className="text-[#10b981] font-bold">- Impact:</span> Protective Retention
+                </div>
+              </div>
 
-            <div className="p-6 rounded-2xl bg-[#141820] border border-[#1d232c] hover:border-[#00b4d8]/40 transition-colors">
-              <Sliders size={24} className="text-[#00d2ff] mb-4" />
-              <h4 className="font-bold text-white mb-1.5">What-If Simulator</h4>
-              <p className="text-xs text-[#94a3b8] leading-relaxed">
-                Adjust balance dips, fee hikes, and credit limits to observe churn risk changes in real-time.
-              </p>
-            </div>
+              {/* Visual SHAP Waterfall Bars */}
+              <div className="lg:col-span-7 font-mono text-xs space-y-2.5 bg-[#f8fafc] p-4 rounded-lg border border-[#e2e8f0]">
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="font-semibold text-[#1e293b]">Account Balance Volatility</span>
+                    <span className="text-[#ef4444] font-bold">+0.34 SHAP (Risk Driver)</span>
+                  </div>
+                  <div className="w-full bg-[#e2e8f0] h-2.5 rounded overflow-hidden">
+                    <div className="bg-[#ef4444] h-full rounded" style={{ width: "82%" }}></div>
+                  </div>
+                </div>
 
-            <div className="p-6 rounded-2xl bg-[#141820] border border-[#1d232c] hover:border-[#00b4d8]/40 transition-colors">
-              <Layers size={24} className="text-[#00d2ff] mb-4" />
-              <h4 className="font-bold text-white mb-1.5">K-Means Segments</h4>
-              <p className="text-xs text-[#94a3b8] leading-relaxed">
-                Automated clustering into High Net Worth, Digital Transactors, and Dormant Savers.
-              </p>
-            </div>
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="font-semibold text-[#1e293b]">Product Holdings &le; 1</span>
+                    <span className="text-[#ef4444] font-bold">+0.26 SHAP (Risk Driver)</span>
+                  </div>
+                  <div className="w-full bg-[#e2e8f0] h-2.5 rounded overflow-hidden">
+                    <div className="bg-[#ef4444] h-full rounded" style={{ width: "65%" }}></div>
+                  </div>
+                </div>
 
-            <div className="p-6 rounded-2xl bg-[#141820] border border-[#1d232c] hover:border-[#00b4d8]/40 transition-colors">
-              <Lock size={24} className="text-[#00d2ff] mb-4" />
-              <h4 className="font-bold text-white mb-1.5">Governance & RBAC</h4>
-              <p className="text-xs text-[#94a3b8] leading-relaxed">
-                Bank-grade access control for Admins, Analysts, and Branch Managers with immutable audit logs.
-              </p>
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="font-semibold text-[#1e293b]">Branch Inactivity &gt; 90d</span>
+                    <span className="text-[#f59e0b] font-bold">+0.19 SHAP (Moderate Risk)</span>
+                  </div>
+                  <div className="w-full bg-[#e2e8f0] h-2.5 rounded overflow-hidden">
+                    <div className="bg-[#f59e0b] h-full rounded" style={{ width: "48%" }}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="font-semibold text-[#1e293b]">Unresolved Grievances &gt; 5d</span>
+                    <span className="text-[#f59e0b] font-bold">+0.15 SHAP (Moderate Risk)</span>
+                  </div>
+                  <div className="w-full bg-[#e2e8f0] h-2.5 rounded overflow-hidden">
+                    <div className="bg-[#f59e0b] h-full rounded" style={{ width: "38%" }}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="font-semibold text-[#1e293b]">Digital App Engagement (&gt;70%)</span>
+                    <span className="text-[#10b981] font-bold">-0.28 SHAP (Protective Factor)</span>
+                  </div>
+                  <div className="w-full bg-[#e2e8f0] h-2.5 rounded overflow-hidden">
+                    <div className="bg-[#10b981] h-full rounded" style={{ width: "70%" }}></div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === "segments" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              <div className="lg:col-span-5 space-y-3 font-sans">
+                <div className="text-xs font-mono text-[#2563eb] font-bold">K-MEANS BEHAVIORAL CLUSTERING</div>
+                <h3 className="text-lg font-extrabold text-[#0f172a]">
+                  Unsupervised Cohort Segmentation
+                </h3>
+                <p className="text-xs text-[#64748b] leading-relaxed">
+                  Identifies behavioral profiles across multi-dimensional customer features. Allows proactive targeting
+                  of high-capital segments prior to balance disengagement.
+                </p>
+                <div className="text-xs font-mono text-[#64748b]">
+                  4 Calibrated Clusters: Affluent, Salaried, Low-Balance, Grievance.
+                </div>
+              </div>
+
+              {/* 2D Segment Cluster Visualization */}
+              <div className="lg:col-span-7 bg-[#f8fafc] p-4 rounded-lg border border-[#e2e8f0]">
+                <div className="grid grid-cols-2 gap-3 font-mono text-xs">
+                  <div className="p-3 bg-[#ffffff] border border-[#ef4444]/30 rounded-md">
+                    <div className="flex items-center justify-between text-[#ef4444] font-bold text-[11px]">
+                      <span>CLUSTER 0: AT-RISK AFFLUENT</span>
+                      <span className="px-1.5 py-0.5 bg-[#ef4444]/10 rounded">CRITICAL</span>
+                    </div>
+                    <div className="text-sm font-bold text-[#0f172a] mt-1">INR 18.5L Avg Capital</div>
+                    <div className="text-[10px] text-[#64748b] mt-0.5">High balance volatility, declining transactions.</div>
+                  </div>
+
+                  <div className="p-3 bg-[#ffffff] border border-[#10b981]/30 rounded-md">
+                    <div className="flex items-center justify-between text-[#10b981] font-bold text-[11px]">
+                      <span>CLUSTER 1: CORE SALARIED</span>
+                      <span className="px-1.5 py-0.5 bg-[#10b981]/10 rounded">LOW RISK</span>
+                    </div>
+                    <div className="text-sm font-bold text-[#0f172a] mt-1">INR 4.2L Avg Capital</div>
+                    <div className="text-[10px] text-[#64748b] mt-0.5">Consistent monthly inflows, high app usage.</div>
+                  </div>
+
+                  <div className="p-3 bg-[#ffffff] border border-[#f59e0b]/30 rounded-md">
+                    <div className="flex items-center justify-between text-[#f59e0b] font-bold text-[11px]">
+                      <span>CLUSTER 2: DORMANT SAVINGS</span>
+                      <span className="px-1.5 py-0.5 bg-[#f59e0b]/10 rounded">MODERATE</span>
+                    </div>
+                    <div className="text-sm font-bold text-[#0f172a] mt-1">INR 85K Avg Capital</div>
+                    <div className="text-[10px] text-[#64748b] mt-0.5">Low digital touchpoints, 1 product held.</div>
+                  </div>
+
+                  <div className="p-3 bg-[#ffffff] border border-[#ef4444]/30 rounded-md">
+                    <div className="flex items-center justify-between text-[#ef4444] font-bold text-[11px]">
+                      <span>CLUSTER 3: ESCALATED GRIEVANCE</span>
+                      <span className="px-1.5 py-0.5 bg-[#ef4444]/10 rounded">HIGH RISK</span>
+                    </div>
+                    <div className="text-sm font-bold text-[#0f172a] mt-1">INR 6.8L Avg Capital</div>
+                    <div className="text-[10px] text-[#64748b] mt-0.5">Multiple unresolved service tickets.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "simulator" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              <div className="lg:col-span-5 space-y-3 font-sans">
+                <div className="text-xs font-mono text-[#2563eb] font-bold">WHAT-IF RETENTION SIMULATION</div>
+                <h3 className="text-lg font-extrabold text-[#0f172a]">
+                  Dynamic Parameter Scenario Modeling
+                </h3>
+                <p className="text-xs text-[#64748b] leading-relaxed">
+                  Test and evaluate targeted interventions like fee waivers, interest concessions, or relationship manager
+                  reassignment. View immediate projected risk reduction before deployment.
+                </p>
+                <div className="pt-1">
+                  <Link
+                    href="/workspace"
+                    className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#2563eb] hover:underline"
+                  >
+                    Open Full Simulator in Workspace &rarr;
+                  </Link>
+                </div>
+              </div>
+
+              {/* Simulation Gauge Visual */}
+              <div className="lg:col-span-7 bg-[#f8fafc] p-4 rounded-lg border border-[#e2e8f0] font-mono">
+                <div className="flex items-center justify-around text-center py-2">
+                  <div className="space-y-1">
+                    <div className="text-[11px] text-[#64748b]">BASELINE CHURN</div>
+                    <div className="text-2xl font-black text-[#ef4444]">74.8%</div>
+                    <div className="text-[10px] text-[#ef4444] font-bold">CRITICAL EXPOSURE</div>
+                  </div>
+
+                  <div className="text-xl font-bold text-[#64748b]">&rarr;</div>
+
+                  <div className="space-y-1">
+                    <div className="text-[11px] text-[#64748b]">WITH RM INTERVENTION</div>
+                    <div className="text-2xl font-black text-[#10b981]">38.2%</div>
+                    <div className="text-[10px] text-[#10b981] font-bold">-36.6% PROBABILITY</div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-[#e2e8f0] flex justify-between items-center text-xs text-[#64748b]">
+                  <span>INTERVENTIONS: Fee Waiver ($50) + Senior RM Touchpoint</span>
+                  <span className="text-[#10b981] font-bold">CAPITAL PRESERVED</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="w-full bg-[#07090c] text-[#94a3b8] py-12 px-6 sm:px-8 border-t border-[#1d232c]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 border-b border-[#1d232c] pb-8">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#00b4d8] flex items-center justify-center text-black font-bold">
-              <ShieldCheck size={18} />
+      {/* 4. SLEEK 1-CLICK DEMO ACCESS (MINIMALIST & USER FRIENDLY) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full border-t border-[#e2e8f0]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+          <div>
+            <div className="text-xs font-mono font-bold text-[#2563eb] uppercase tracking-wider">
+              INSTANT DEMO PROFILES
             </div>
-            <span className="text-lg font-bold text-white tracking-wider uppercase font-sans">
-              Aegis<span className="text-[#00b4d8]">Risk</span>
-            </span>
+            <h2 className="text-xl font-extrabold text-[#0f172a]">
+              One-Click Role Launch
+            </h2>
           </div>
-
-          <div className="flex items-center gap-6 text-xs font-semibold">
-            <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
-            <a href="#capabilities" className="hover:text-white transition-colors">Risk Engine</a>
-            <Link href="/login" className="hover:text-white transition-colors">Sign in</Link>
-            <Link href="/workspace" className="text-[#00d2ff] hover:underline">Workspace App</Link>
-          </div>
+          <span className="text-xs text-[#64748b] font-mono">
+            No password required to evaluate preset roles
+          </span>
         </div>
 
-        <div className="max-w-7xl mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748b] gap-4">
-          <p>© 2026 AegisRisk Intelligence. Enterprise Banking Risk & Churn Decision Platform.</p>
-          <p className="font-mono">Dark Enterprise System &bull; Port 3000</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {demoRoles.map((role) => (
+            <div
+              key={role.key}
+              onClick={() => handleLaunchRole(role.key)}
+              className="bg-[#ffffff] border border-[#e2e8f0] hover:border-[#2563eb] p-4 rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md group flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-9 h-9 rounded-lg font-mono font-bold flex items-center justify-center text-xs ${role.color}`}>
+                    {role.avatar}
+                  </div>
+                  <span className="text-[10px] font-mono font-bold text-[#64748b] bg-[#f1f5f9] px-2 py-0.5 rounded">
+                    {role.badge}
+                  </span>
+                </div>
+
+                <h3 className="font-bold text-sm text-[#0f172a] group-hover:text-[#2563eb] transition-colors">
+                  {role.key}
+                </h3>
+                <div className="text-xs text-[#2563eb] font-semibold">{role.name}</div>
+                <p className="text-xs text-[#64748b] mt-1.5 leading-snug">{role.role}</p>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-[#f1f5f9] flex items-center justify-between font-mono text-xs">
+                <span className="text-[#2563eb] font-bold group-hover:underline">
+                  {activeRole === role.key ? "Launching..." : "Launch Profile"}
+                </span>
+                <ChevronRight size={14} className="text-[#2563eb] group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. MINIMALIST FOOTER */}
+      <footer className="w-full bg-[#ffffff] border-t border-[#e2e8f0] mt-12 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748b] font-mono gap-4">
+          <div className="flex items-center gap-3">
+            <CmdLogo size="sm" showSubtitle={false} clickable={false} />
+            <span className="text-[#cbd5e1]">|</span>
+            <span>Churn Modeling & Decision Engine</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Link href="/workspace" className="hover:text-[#2563eb] transition-colors">
+              Workspace
+            </Link>
+            <Link href="/login" className="hover:text-[#2563eb] transition-colors">
+              Sign In
+            </Link>
+            <span>v1.0.0</span>
+          </div>
         </div>
       </footer>
     </div>

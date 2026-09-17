@@ -89,8 +89,8 @@ const PORT = ENV.PORT;
 async function startServer() {
   await connectDB();
   app.listen(PORT, () => {
-    console.log(`🚀 AegisRisk Backend API listening on http://localhost:${PORT}`);
-    console.log(`🔒 Authentication & RBAC active (Roles: ADMIN, ANALYST, MANAGER)`);
+    console.log(`Banking Customer Risk & Churn Analytics API listening on http://localhost:${PORT}`);
+    console.log(`Authentication & RBAC active (Roles: ADMIN, ANALYST, MANAGER)`);
   });
 }
 

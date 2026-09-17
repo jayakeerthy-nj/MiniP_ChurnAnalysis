@@ -369,7 +369,7 @@ export const AdminView: React.FC = () => {
                     <td className="font-semibold text-white">{log.userName}</td>
                     <td><span className="tag-pill tag-neutral text-[10px]">{log.role}</span></td>
                     <td className="font-mono text-cyanMain text-xs">{log.action}</td>
-                    <td className="font-mono text-xs text-muted">{log.resource || "—"}</td>
+                    <td className="font-mono text-xs text-muted">{log.resource || "-"}</td>
                     <td>
                       <span className={`tag-pill ${log.success ? "tag-green" : "tag-red"}`}>
                         {log.success ? "SUCCESS" : "FAILED"}

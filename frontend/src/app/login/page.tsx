@@ -3,31 +3,82 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, EyeOff, Globe, ArrowRight, ShieldCheck, CheckCircle2, Lock, Sparkles } from "lucide-react";
-import { useAuthStore, DEMO_PROFILES } from "../../stores/authStore";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, CheckCircle2, ShieldCheck, UserCheck } from "lucide-react";
+import { CmdLogo } from "@/components/CmdLogo";
+import { useAuthStore, DEMO_PROFILES } from "@/stores/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
   const { loginWithCredentials, loginDemoProfile } = useAuthStore();
 
-  const [email, setEmail] = useState("analyst@bank.com");
-  const [password, setPassword] = useState("Analyst@123");
+  const [activeTab, setActiveTab] = useState<"quick" | "form">("quick");
+  const [email, setEmail] = useState("admin@bank.com");
+  const [password, setPassword] = useState("Admin@123");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [activeDemo, setActiveDemo] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [langDropdown, setLangDropdown] = useState(false);
-  const [selectedLang, setSelectedLang] = useState("English");
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [statusNotice, setStatusNotice] = useState<string | null>(null);
+  const [loggingInRole, setLoggingInRole] = useState<string | null>(null);
 
-  const demoRoles = [
-    { key: "Risk Analyst", label: "Risk Analyst", desc: "Priya Sharma (Portfolio & SHAP Analyst)" },
-    { key: "Branch Manager", label: "Branch Manager", desc: "Vikram Mehta (Branch Interventions)" },
-    { key: "Chief Risk Officer", label: "Chief Risk Officer", desc: "Arjun Kapoor (Admin & Governance)" },
-    { key: "Compliance Officer", label: "Compliance Officer", desc: "Ananya Deshmukh (Audit & RBAC)" },
-    { key: "Demo Guest", label: "Demo Guest", desc: "Instant Sandbox Evaluation" },
+  const demoAccounts = [
+    {
+      roleKey: "Chief Risk Officer",
+      name: "Arjun Kapoor",
+      badge: "ADMIN",
+      title: "Chief Risk Officer & Admin",
+      email: "admin@bank.com",
+      avatar: "AK",
+      color: "bg-[#2563eb] text-white",
+      desc: "Full administrative access, risk watchlists, user management, and executive governance."
+    },
+    {
+      roleKey: "Risk Analyst",
+      name: "Priya Sharma",
+      badge: "ANALYST",
+      title: "Senior Risk & Churn Analyst",
+      email: "analyst@bank.com",
+      avatar: "PS",
+      color: "bg-[#10b981] text-white",
+      desc: "SHAP explainability, model diagnostics, customer 360 dossiers, and scenario simulation."
+    },
+    {
+      roleKey: "Branch Manager",
+      name: "Vikram Mehta",
+      badge: "MANAGER",
+      title: "Regional Branch Manager",
+      email: "manager@bank.com",
+      avatar: "VM",
+      color: "bg-[#f59e0b] text-white",
+      desc: "Regional branch customer surveillance, escalation tracking, and retention outreach."
+    },
+    {
+      roleKey: "Compliance Officer",
+      name: "Ananya Deshmukh",
+      badge: "ADMIN",
+      title: "Governance & Audit Lead",
+      email: "compliance@bank.com",
+      avatar: "AD",
+      color: "bg-[#8b5cf6] text-white",
+      desc: "Regulatory audit trails, model version histories, and fair lending governance."
+    }
   ];
+
+  const handleQuickLogin = async (roleKey: string) => {
+    setLoggingInRole(roleKey);
+    setLoading(true);
+    setErrorMessage(null);
+    try {
+      await loginDemoProfile(roleKey);
+      setStatusNotice(`Signed in as ${roleKey}. Redirecting to workspace...`);
+      setTimeout(() => {
+        router.push("/workspace");
+      }, 300);
+    } catch (e) {
+      router.push("/workspace");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,161 +87,162 @@ export default function LoginPage() {
     try {
       const ok = await loginWithCredentials(email, password);
       if (ok) {
-        setToastMsg("Authentication verified. Redirecting to intelligence workspace...");
+        setStatusNotice("Authentication successful. Launching workspace...");
         setTimeout(() => {
           router.push("/workspace");
-        }, 350);
+        }, 300);
       } else {
-        setErrorMessage("Invalid credentials. Select a demo workspace below for instant access.");
+        setErrorMessage("Invalid credentials. Please verify your email and password, or use 1-click demo login.");
       }
     } catch (err: any) {
-      setErrorMessage("Authentication encountered an issue. Launching demo workspace...");
-      setTimeout(() => router.push("/workspace"), 500);
+      setErrorMessage(err?.response?.data?.error || "Authentication error. Please check your credentials.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelectDemoRole = async (roleKey: string) => {
-    setActiveDemo(roleKey);
-    setLoading(true);
-    setErrorMessage(null);
-
-    const profile = DEMO_PROFILES[roleKey];
-    if (profile) {
-      setEmail(profile.user.email);
-      setPassword(profile.pass);
-    }
-
-    try {
-      await loginDemoProfile(roleKey);
-      setToastMsg(`Logged in as ${roleKey} (${profile?.user.name || "Demo User"}). Launching workspace...`);
-      setTimeout(() => {
-        router.push("/workspace");
-      }, 400);
-    } catch (e) {
-      router.push("/workspace");
-    } finally {
-      setLoading(false);
-    }
+  const handleFillPreset = (presetEmail: string, presetPass: string) => {
+    setEmail(presetEmail);
+    setPassword(presetPass);
+    setActiveTab("form");
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] flex flex-col justify-between p-4 sm:p-6 md:p-10 font-sans text-[#f8fafc] relative selection:bg-[#00d2ff] selection:text-black overflow-hidden">
-      {/* Ambient background glows */}
-      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-gradient-to-bl from-[#00b4d8]/15 via-[#0077b6]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-[#00d2ff]/10 via-[#0a0c10] to-transparent rounded-full blur-3xl pointer-events-none" />
-      
-      {/* Telemetry Grid */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: "linear-gradient(#00d2ff 1px, transparent 1px), linear-gradient(90deg, #00d2ff 1px, transparent 1px)",
-          backgroundSize: "40px 40px"
-        }}
-      />
-
-      {/* Top Header / Back Link */}
-      <header className="w-full max-w-6xl mx-auto flex items-center justify-between z-10">
+    <div className="min-h-screen bg-[#f8f9fa] text-[#1e293b] font-sans flex flex-col justify-between p-4 sm:p-6 md:p-8">
+      {/* Top Header */}
+      <header className="w-full max-w-4xl mx-auto flex items-center justify-between pb-4 border-b border-[#e2e8f0]">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[#94a3b8] hover:text-[#00d2ff] transition-colors px-3 py-1.5 rounded-lg bg-[#141820] border border-[#1d232c] hover:border-[#27303d]"
+          className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#64748b] hover:text-[#0f172a] transition-colors"
         >
-          <ArrowLeft size={16} className="text-[#00b4d8]" />
-          <span>Home</span>
+          <ArrowLeft size={14} />
+          <span>Back to Home</span>
         </Link>
+
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
+          <span className="text-xs font-mono text-[#64748b]">RBAC Gateway Online</span>
+        </div>
       </header>
 
-      {/* Main Login Card Area */}
-      <main className="w-full max-w-md mx-auto my-auto py-6 z-10">
-        <div className="bg-[#141820] rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-[#27303d] hover:border-[#00b4d8]/40 p-6 sm:p-9 transition-all">
-          {/* Top Bar: Language selector */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-6" /> {/* spacer */}
-            
-            {/* Language Switcher Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setLangDropdown(!langDropdown)}
-                className="inline-flex items-center gap-1.5 text-xs text-[#94a3b8] hover:text-white font-medium px-2.5 py-1 rounded-md bg-[#0a0c10] border border-[#1d232c] hover:border-[#27303d] transition-colors"
-              >
-                <Globe size={14} className="text-[#00b4d8]" />
-                <span>{selectedLang}</span>
-                <span className="text-[10px] text-[#64748b]">▼</span>
-              </button>
+      {/* Main Login Card */}
+      <main className="w-full max-w-2xl mx-auto my-6 bg-[#ffffff] border border-[#e2e8f0] rounded-xl p-6 sm:p-8 shadow-sm">
+        {/* Brand Banner */}
+        <div className="text-center pb-6 border-b border-[#e2e8f0]">
+          <div className="flex justify-center mb-3">
+            <CmdLogo size="lg" showSubtitle={true} clickable={false} />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#0f172a]">
+            Portal Authentication
+          </h1>
+          <p className="text-xs sm:text-sm text-[#64748b] mt-1">
+            Choose an authorized evaluation role below for 1-click access, or sign in with your email.
+          </p>
+        </div>
 
-              {langDropdown && (
-                <div className="absolute right-0 mt-1.5 w-36 bg-[#141820] rounded-xl shadow-2xl border border-[#27303d] py-1.5 z-30 text-xs font-medium">
-                  {["English", "Hindi (हिंदी)", "Marathi (मराठी)", "Tamil (தமிழ்)"].map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => {
-                        setSelectedLang(lang.split(" ")[0]);
-                        setLangDropdown(false);
-                      }}
-                      className="w-full text-left px-3.5 py-2 hover:bg-[#1c222c] text-[#94a3b8] hover:text-[#00d2ff]"
-                    >
-                      {lang}
-                    </button>
-                  ))}
+        {/* Tab Switcher */}
+        <div className="flex items-center justify-center gap-2 my-6 font-mono text-xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("quick")}
+            className={`px-4 py-2 rounded-md font-bold transition-all cursor-pointer ${
+              activeTab === "quick"
+                ? "bg-[#2563eb] text-white shadow-sm"
+                : "bg-[#f1f5f9] text-[#64748b] hover:text-[#0f172a]"
+            }`}
+          >
+            1-Click Demo Profiles (Recommended)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("form")}
+            className={`px-4 py-2 rounded-md font-bold transition-all cursor-pointer ${
+              activeTab === "form"
+                ? "bg-[#2563eb] text-white shadow-sm"
+                : "bg-[#f1f5f9] text-[#64748b] hover:text-[#0f172a]"
+            }`}
+          >
+            Sign In with Email
+          </button>
+        </div>
+
+        {/* Status & Error Alerts */}
+        {errorMessage && (
+          <div className="mb-5 p-3 bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c] text-xs font-mono rounded-lg flex items-center gap-2">
+            <span>&bull;</span>
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {statusNotice && (
+          <div className="mb-5 p-3 bg-[#f0fdf4] border border-[#bbf7d0] text-[#15803d] text-xs font-mono rounded-lg flex items-center gap-2">
+            <CheckCircle2 size={16} />
+            <span>{statusNotice}</span>
+          </div>
+        )}
+
+        {/* TAB 1: 1-CLICK DEMO PROFILES */}
+        {activeTab === "quick" && (
+          <div className="space-y-3">
+            <div className="text-xs text-[#64748b] font-mono mb-2">
+              Select a pre-configured role to immediately enter the authenticated workspace:
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {demoAccounts.map((account) => (
+                <div
+                  key={account.roleKey}
+                  className="border border-[#e2e8f0] hover:border-[#2563eb] bg-[#f8fafc] hover:bg-[#ffffff] p-4 rounded-lg transition-all shadow-sm flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`w-8 h-8 rounded-md font-mono font-bold flex items-center justify-center text-xs ${account.color}`}>
+                        {account.avatar}
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-[#64748b] bg-[#e2e8f0] px-2 py-0.5 rounded">
+                        {account.badge}
+                      </span>
+                    </div>
+
+                    <div className="font-bold text-sm text-[#0f172a]">{account.roleKey}</div>
+                    <div className="text-xs font-semibold text-[#2563eb]">{account.name}</div>
+                    <p className="text-[11px] text-[#64748b] mt-1 leading-snug">{account.desc}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => handleQuickLogin(account.roleKey)}
+                    className="mt-4 w-full py-2 bg-[#ffffff] hover:bg-[#2563eb] text-[#2563eb] hover:text-white border border-[#2563eb] text-xs font-mono font-bold rounded-md transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <span>{loggingInRole === account.roleKey ? "Signing In..." : `Sign In as ${account.name.split(" ")[0]}`}</span>
+                    <ArrowRight size={13} />
+                  </button>
                 </div>
-              )}
+              ))}
             </div>
           </div>
+        )}
 
-          {/* Brand Emblem & Logo */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 rounded-2xl bg-[#0a0c10] border border-[#00b4d8]/40 flex items-center justify-center text-[#00d2ff] mb-2.5 shadow-[0_0_20px_rgba(0,210,255,0.2)]">
-              <ShieldCheck size={24} />
-            </div>
-            <h1 className="text-xl font-extrabold tracking-wider uppercase text-white font-sans">
-              Aegis<span className="text-[#00b4d8]">Risk</span>
-            </h1>
-          </div>
-
-          {/* Heading & Subtitle */}
-          <div className="text-center mt-5 mb-7">
-            <h2 className="text-xl sm:text-[22px] font-bold text-white leading-tight">
-              One market. Every decision connected.
-            </h2>
-            <p className="text-xs sm:text-sm text-[#94a3b8] mt-1.5 font-normal">
-              Sign in to your AegisRisk intelligence workspace.
-            </p>
-          </div>
-
-          {/* Toast / Notification */}
-          {toastMsg && (
-            <div className="mb-5 p-3 rounded-xl bg-[#00b4d8]/10 border border-[#00b4d8]/40 text-[#00d2ff] text-xs font-medium flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-[#00d2ff] shrink-0" />
-              <span>{toastMsg}</span>
-            </div>
-          )}
-
-          {errorMessage && (
-            <div className="mb-5 p-3 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/40 text-[#ef4444] text-xs font-medium">
-              {errorMessage}
-            </div>
-          )}
-
-          {/* Login Form */}
-          <form onSubmit={handleManualLogin} className="space-y-4">
+        {/* TAB 2: MANUAL FORM SIGN-IN */}
+        {activeTab === "form" && (
+          <form onSubmit={handleManualLogin} className="space-y-4 font-mono text-xs">
             <div>
-              <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">
-                Email / Mobile Number
+              <label className="block text-[11px] font-bold text-[#475569] uppercase tracking-wider mb-1">
+                Banking Email Address
               </label>
               <input
-                type="text"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="analyst@bank.com"
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#27303d] text-sm text-white placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#00b4d8]/30 focus:border-[#00b4d8] transition-all bg-[#0a0c10]"
+                className="w-full bg-[#f8fafc] border border-[#cbd5e1] focus:border-[#2563eb] text-[#0f172a] px-3.5 py-2.5 rounded-lg outline-none font-mono transition-colors"
+                placeholder="e.g. admin@bank.com"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">
+              <label className="block text-[11px] font-bold text-[#475569] uppercase tracking-wider mb-1">
                 Password
               </label>
               <div className="relative">
@@ -198,95 +250,47 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
                   required
-                  className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-[#27303d] text-sm text-white placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#00b4d8]/30 focus:border-[#00b4d8] transition-all bg-[#0a0c10]"
+                  className="w-full bg-[#f8fafc] border border-[#cbd5e1] focus:border-[#2563eb] text-[#0f172a] px-3.5 py-2.5 rounded-lg outline-none font-mono pr-10 transition-colors"
+                  placeholder="Enter password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#00d2ff] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#0f172a]"
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between pt-0.5 text-xs">
-              <label className="flex items-center gap-2 cursor-pointer select-none text-[#94a3b8] font-medium">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-[#27303d] text-[#00b4d8] focus:ring-[#00b4d8] rounded-sm cursor-pointer accent-[#00b4d8]"
-                />
-                <span>Remember me</span>
-              </label>
-
+            <div className="flex items-center justify-between text-[11px] text-[#64748b]">
+              <span>Sample: admin@bank.com / Admin@123</span>
               <button
                 type="button"
-                onClick={() => alert("Demo Password Reset: Use one of the 1-click preview workspaces below for instant demo access.")}
-                className="text-[#64748b] hover:text-[#00d2ff] font-medium transition-colors"
+                onClick={() => handleFillPreset("admin@bank.com", "Admin@123")}
+                className="text-[#2563eb] hover:underline font-bold"
               >
-                Forgot password?
+                Auto-fill Admin Credentials
               </button>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3 px-4 rounded-xl bg-[#00b4d8] hover:bg-[#00d2ff] active:scale-[0.99] text-black font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(0,180,216,0.3)] disabled:opacity-75 cursor-pointer"
+              className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold py-3 rounded-lg text-xs tracking-wider transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer"
             >
-              <span>{loading ? "Authenticating..." : "LOGIN"}</span>
-              <ArrowRight size={15} />
+              <span>{loading ? "AUTHENTICATING..." : "SIGN IN TO RISK WORKSPACE"}</span>
+              <ArrowRight size={14} />
             </button>
           </form>
-
-          {/* Create Account Link */}
-          <div className="mt-6 text-center text-xs text-[#94a3b8]">
-            <span>Don't have an account? </span>
-            <button
-              type="button"
-              onClick={() => handleSelectDemoRole("Demo Guest")}
-              className="text-[#00d2ff] font-bold tracking-wide hover:underline uppercase text-[11px]"
-            >
-              CREATE ACCOUNT
-            </button>
-          </div>
-        </div>
+        )}
       </main>
 
-      {/* Bottom Bar: Preview a Workspace (Aegis Dark Enterprise Theme) */}
-      <footer className="w-full max-w-5xl mx-auto pt-4 pb-2 z-10">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-xs">
-          <span className="text-[#94a3b8] font-medium shrink-0 flex items-center gap-1.5">
-            <Sparkles size={14} className="text-[#00d2ff]" />
-            Preview a workspace:
-          </span>
-
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            {demoRoles.map((role) => {
-              const isSelected = activeDemo === role.key;
-              return (
-                <button
-                  key={role.key}
-                  type="button"
-                  onClick={() => handleSelectDemoRole(role.key)}
-                  title={role.desc}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all shadow-sm cursor-pointer ${
-                    isSelected
-                      ? "bg-[#00b4d8] text-black border-[#00d2ff] scale-105 shadow-[0_0_15px_rgba(0,210,255,0.4)]"
-                      : "bg-[#141820] text-[#f8fafc] border-[#27303d] hover:border-[#00b4d8] hover:text-[#00d2ff] active:scale-95"
-                  }`}
-                >
-                  {role.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      {/* Footer */}
+      <footer className="w-full max-w-4xl mx-auto flex items-center justify-between text-xs text-[#64748b] font-mono border-t border-[#e2e8f0] pt-4">
+        <span>cmd. Churn Modeling & Decision Engine</span>
+        <span>Role-Based Access Control Active</span>
       </footer>
     </div>
   );

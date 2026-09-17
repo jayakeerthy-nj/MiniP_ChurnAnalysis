@@ -136,22 +136,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user: matched.user, token: mockToken });
         return true;
       }
-      // If user typed custom credentials, allow demo access smoothly
-      if (trimmedEmail.includes("@") && pass.length >= 3) {
-        const fallbackUser: User = {
-          userId: `USR-${Math.floor(100 + Math.random() * 900)}`,
-          name: email.split("@")[0].replace(".", " ").toUpperCase(),
-          email: trimmedEmail,
-          role: trimmedEmail.includes("admin") ? "ADMIN" : trimmedEmail.includes("manager") ? "MANAGER" : "ANALYST",
-          title: "Authorized Banking Officer"
-        };
-        const mockToken = `demo_jwt_${Date.now()}`;
-        if (typeof window !== "undefined") {
-          localStorage.setItem("aegis_access_token", mockToken);
-        }
-        set({ user: fallbackUser, token: mockToken });
-        return true;
-      }
       return false;
     }
   },

@@ -17,7 +17,7 @@ You are a senior banking customer intelligence AI analyst.
 Analyze the following verified banking data for customer ${customer.name} (ID: ${customer.customerId}):
 - Age: ${customer.age}, City: ${customer.city}, Occupation: ${customer.occupation}
 - Relationship Tenure: ${customer.tenureMonths} months, Credit Score: ${customer.creditScore}
-- Current Balance: ₹${features.currentBalance.toLocaleString()}, Products: ${features.numberOfProducts}
+- Current Balance: INR ${features.currentBalance.toLocaleString()}, Products: ${features.numberOfProducts}
 - Monthly Transactions: ${features.transactionsPerMonth}, Digital Adoption: ${features.digitalUsagePercentage}%
 - Grievances: ${features.complaintCount} total (${features.unresolvedComplaints} unresolved)
 - Predicted Churn Risk: ${(prediction.churnProbability * 100).toFixed(1)}% (${prediction.riskLevel} RISK)
@@ -60,7 +60,7 @@ Based on the following portfolio statistics:
 - Baseline Churn Rate: ${kpis.churnRate}%
 - High & Critical Risk Population: ${kpis.highRiskCount + kpis.criticalRiskCount} customers
 - Average Engagement Score: ${kpis.avgEngagementScore}/100
-- Total Monitored Portfolio Balance: ₹${(kpis.totalBalance / 10000000).toFixed(2)} Crores
+- Total Monitored Portfolio Balance: INR ${(kpis.totalBalance / 10000000).toFixed(2)} Crores
 - Top SHAP Churn Drivers: ${topDrivers.map((d: any) => d.feature).slice(0, 4).join(", ")}
 
 Provide a concise 3-bullet point Executive Risk Briefing for senior management outlining key vulnerabilities and portfolio intervention priorities.
@@ -76,6 +76,6 @@ Provide a concise 3-bullet point Executive Risk Briefing for senior management o
       }
     }
 
-    return `• Portfolio Risk Concentration: Churn exposure is heavily concentrated among ${kpis.criticalRiskCount} critical-risk accounts, primarily triggered by rapid transaction deceleration and unresolved branch complaints.\n• Digital Channel Deficit: Accounts with digital adoption under 35% exhibit a 3.4x higher churn velocity compared to multi-channel users.\n• Strategic Directive: Execute priority SLA enforcement on the 28 active escalation tickets and launch targeted digital onboarding incentives to stabilize Tier-1 deposit balances.`;
+    return `- Portfolio Risk Concentration: Churn exposure is heavily concentrated among ${kpis.criticalRiskCount} critical-risk accounts, primarily triggered by rapid transaction deceleration and unresolved branch complaints.\n- Digital Channel Deficit: Accounts with digital adoption under 35% exhibit a 3.4x higher churn velocity compared to multi-channel users.\n- Strategic Directive: Execute priority SLA enforcement on the 28 active escalation tickets and launch targeted digital onboarding incentives to stabilize Tier-1 deposit balances.`;
   }
 };

@@ -41,7 +41,7 @@ export const analyticsService = {
         month,
         churnRate: Math.round(baseChurn * 10) / 10,
         activityVolume: Math.round(activity),
-        criticalRiskCount: Math.round(110 + idx * 3.5 + Math.random() * 8),
+        criticalRiskCount: Math.round(110 + idx * 3.5 + Math.sin(idx) * 4),
         drainageAmount: Math.round((800000 + idx * 45000) * 1.2)
       };
     });
