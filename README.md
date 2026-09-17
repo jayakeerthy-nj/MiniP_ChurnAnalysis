@@ -85,7 +85,6 @@ cp .env.example .env
 ### 1. Clone the Repository
 ```bash
 git clone <repo-url>
-cd minip
 ```
 
 ### 2. Configure Environment
