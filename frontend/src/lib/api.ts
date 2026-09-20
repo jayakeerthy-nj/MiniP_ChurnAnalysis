@@ -8,31 +8,10 @@ export const api = axios.create({
   }
 });
 
-let isRefreshing = false;
-
-api.interceptors.request.use(async (config) => {
+// Attach stored access token to every request
+api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    let token = localStorage.getItem("aegis_access_token");
-    
-    // Auto-authenticate if no token is stored yet
-    if (!token && !isRefreshing && !config.url?.includes("/auth/login")) {
-      isRefreshing = true;
-      try {
-        const res = await axios.post("/api/auth/login", {
-          email: "admin@bank.com",
-          password: "Admin@123"
-        }, { timeout: 5000 });
-        token = res.data?.accessToken;
-        if (token) {
-          localStorage.setItem("aegis_access_token", token);
-        }
-      } catch (err) {
-        // Fallback for offline or standalone evaluation
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
+    const token = localStorage.getItem("aegis_access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -40,26 +19,17 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// On 401, clear token and redirect to login (never auto-authenticate)
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/auth/login")) {
-      originalRequest._retry = true;
-      try {
-        const res = await axios.post("/api/auth/login", {
-          email: "admin@bank.com",
-          password: "Admin@123"
-        }, { timeout: 5000 });
-        const token = res.data?.accessToken;
-        if (token) {
-          localStorage.setItem("aegis_access_token", token);
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        }
-      } catch (loginErr) {
-        return Promise.reject(loginErr);
-      }
+  (error) => {
+    if (
+      error.response?.status === 401 &&
+      typeof window !== "undefined" &&
+      !window.location.pathname.includes("/login")
+    ) {
+      localStorage.removeItem("aegis_access_token");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

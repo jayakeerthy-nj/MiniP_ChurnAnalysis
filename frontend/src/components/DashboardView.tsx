@@ -110,7 +110,7 @@ export const DashboardView: React.FC = () => {
             <span className="kpi-figure">
               {kpis?.totalBalance !== undefined
                 ? `INR ${(kpis.totalBalance / 10000000).toFixed(2)} Cr`
-                : "—"}
+                : "-"}
             </span>
           </div>
         </div>
@@ -120,7 +120,7 @@ export const DashboardView: React.FC = () => {
           <div className="kpi-title">TOTAL CUSTOMERS</div>
           <div className="kpi-bottom">
             <span className="kpi-figure">
-              {kpis?.totalCustomers !== undefined ? kpis.totalCustomers.toLocaleString() : "—"}
+              {kpis?.totalCustomers !== undefined ? kpis.totalCustomers.toLocaleString() : "-"}
             </span>
           </div>
         </div>
@@ -130,7 +130,7 @@ export const DashboardView: React.FC = () => {
           <div className="kpi-title">ACTIVE ACCOUNTS</div>
           <div className="kpi-bottom">
             <span className="kpi-figure text-[#10b981]">
-              {kpis?.activeCustomers !== undefined ? kpis.activeCustomers.toLocaleString() : "—"}
+              {kpis?.activeCustomers !== undefined ? kpis.activeCustomers.toLocaleString() : "-"}
             </span>
           </div>
         </div>
@@ -140,7 +140,7 @@ export const DashboardView: React.FC = () => {
           <div className="kpi-title">CHURN RATE</div>
           <div className="kpi-bottom">
             <span className="kpi-figure text-[#3d7eff]">
-              {kpis?.churnRate !== undefined ? `${kpis.churnRate}%` : "—"}
+              {kpis?.churnRate !== undefined ? `${kpis.churnRate}%` : "-"}
             </span>
           </div>
         </div>
@@ -150,7 +150,7 @@ export const DashboardView: React.FC = () => {
           <div className="kpi-title">CRITICAL RISK</div>
           <div className="kpi-bottom">
             <span className="kpi-figure text-[#ef4444]">
-              {kpis?.criticalRiskCount !== undefined ? kpis.criticalRiskCount.toLocaleString() : "—"}
+              {kpis?.criticalRiskCount !== undefined ? kpis.criticalRiskCount.toLocaleString() : "-"}
             </span>
           </div>
         </div>
@@ -160,7 +160,7 @@ export const DashboardView: React.FC = () => {
           <div className="kpi-title">HIGH RISK</div>
           <div className="kpi-bottom">
             <span className="kpi-figure text-[#f59e0b]">
-              {kpis?.highRiskCount !== undefined ? kpis.highRiskCount.toLocaleString() : "—"}
+              {kpis?.highRiskCount !== undefined ? kpis.highRiskCount.toLocaleString() : "-"}
             </span>
           </div>
         </div>
@@ -170,7 +170,7 @@ export const DashboardView: React.FC = () => {
           <div className="kpi-title">OPEN GRIEVANCES</div>
           <div className="kpi-bottom">
             <span className="kpi-figure">
-              {kpis?.unresolvedComplaints !== undefined ? kpis.unresolvedComplaints.toLocaleString() : "—"}
+              {kpis?.unresolvedComplaints !== undefined ? kpis.unresolvedComplaints.toLocaleString() : "-"}
             </span>
           </div>
         </div>
@@ -319,7 +319,7 @@ export const DashboardView: React.FC = () => {
               <span className="text-[#ef4444] font-bold">
                 {kpis
                   ? `${((kpis.criticalRiskCount || 0) + (kpis.highRiskCount || 0)).toLocaleString()} High & Critical Accounts`
-                  : "—"}
+                  : "-"}
               </span>
             </div>
           </div>
@@ -432,7 +432,7 @@ export const DashboardView: React.FC = () => {
                     <tr key={cust.customerId} className="border-b border-[#f1f3f5] hover:bg-[#f8f9fa]">
                       <td className="font-mono text-[#3d7eff] font-bold py-1.5">{cust.customerId}</td>
                       <td className="font-bold text-[#18191b] py-1.5">{cust.name || "Customer"}</td>
-                      <td className="text-[#6b7280] py-1.5">{cust.city || "—"}</td>
+                      <td className="text-[#6b7280] py-1.5">{cust.city || "-"}</td>
                       <td className="py-1.5">
                         <span
                           className={`tag-pill ${
@@ -447,7 +447,7 @@ export const DashboardView: React.FC = () => {
                       <td className="text-right font-mono text-[#2f2f34] py-1.5">
                         {cust.currentBalance !== undefined
                           ? `INR ${(cust.currentBalance / 100000).toFixed(1)}L`
-                          : "—"}
+                          : "-"}
                       </td>
                       <td className="text-center py-1.5">
                         <button

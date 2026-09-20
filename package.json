@@ -1,7 +1,7 @@
 {
   "name": "banking-churn-analytics",
   "version": "1.0.0",
-  "description": "cmd. \u2014 Churn Modeling & Decision Engine: Calibrated Customer Risk & Churn Analytics Platform",
+  "description": "cmd. Churn Modeling & Decision Engine: Calibrated Customer Risk & Churn Analytics Platform",
   "scripts": {
     "dev:ml": "cd ml-service && (test -f venv/bin/python3 && ./venv/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 || python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000)",
     "dev:backend": "cd backend && npm run dev",
@@ -9,7 +9,10 @@
     "dev": "concurrently -k -p \"[{name}]\" -n \"ML,BACKEND,FRONTEND\" -c \"yellow.bold,blue.bold,green.bold\" \"npm run dev:ml\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "npm --prefix backend run build && npm --prefix frontend run build",
     "seed": "npm --prefix backend run seed",
-    "train": "cd ml-service && (test -f venv/bin/python3 && ./venv/bin/python3 training/train.py || python3 training/train.py)"
+    "train": "cd ml-service && (test -f venv/bin/python3 && ./venv/bin/python3 training/train.py || python3 training/train.py)",
+    "test:ml": "cd ml-service && (test -f venv/bin/python3 && ./venv/bin/python3 -m pytest tests/ -v || python3 -m pytest tests/ -v)",
+    "test:backend": "cd backend && npm run test",
+    "test": "npm run test:backend && npm run test:ml"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -1,13 +1,14 @@
 {
   "name": "banking-churn-backend",
   "version": "1.0.0",
-  "description": "cmd. \u2014 Churn Modeling & Decision Engine Backend API Service",
+  "description": "cmd. Churn Modeling & Decision Engine Backend API Service",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "test": "tsx --test src/tests/api.test.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

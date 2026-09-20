@@ -24,6 +24,7 @@ services:
       - ./ml-service/artifacts:/app/artifacts
     depends_on:
       - mongodb
+    restart: unless-stopped
 
   backend:
     build:
@@ -37,17 +38,22 @@ services:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://mongodb:27017/banking_churn_db
       - ML_SERVICE_URL=http://ml-service:8000
-      - JWT_ACCESS_SECRET=aegis_prod_access_secret_2026
-      - JWT_REFRESH_SECRET=aegis_prod_refresh_secret_2026
+      - ML_SERVICE_API_KEY=${ML_SERVICE_API_KEY:-aegis_ml_internal_key}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - FRONTEND_URL=http://localhost:3000
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     depends_on:
       - mongodb
       - ml-service
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - BACKEND_URL=http://backend:5000
     container_name: aegis-frontend
     ports:
       - "3000:3000"
@@ -55,6 +61,7 @@ services:
       - NODE_ENV=production
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
   mongo_data:

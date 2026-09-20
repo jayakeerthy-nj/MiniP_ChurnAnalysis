@@ -84,13 +84,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: {
-    userId: "USR-001",
-    name: "Arjun Kapoor",
-    email: "admin@bank.com",
-    role: "ADMIN",
-    title: "Chief Risk Officer & Admin"
-  },
+  user: null,
   token: null,
   activeTab: "dashboard",
   selectedCustomerId: null,
@@ -124,11 +118,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user, token: accessToken });
       return true;
     } catch (err) {
-      // Offline fallback / match against DEMO_PROFILES
+      // Offline fallback: check against demo profiles with correct password
       const matched = Object.values(DEMO_PROFILES).find(
-        (p) => p.user.email.toLowerCase() === trimmedEmail
+        (p) => p.user.email.toLowerCase() === trimmedEmail && p.pass === pass
       );
-      if (matched && (matched.pass === pass || pass === "demo" || pass === "123456" || pass === "Admin@123")) {
+      if (matched) {
         const mockToken = `demo_jwt_${Date.now()}`;
         if (typeof window !== "undefined") {
           localStorage.setItem("aegis_access_token", mockToken);
@@ -156,7 +150,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user: { ...user, title: profile.user.title }, token: accessToken });
       return true;
     } catch (e) {
-      // Backend may be running without seeded db or cold, use instant profile
+      // Backend offline: use demo profile data as fallback
       const mockToken = `demo_jwt_${profile.user.userId}_${Date.now()}`;
       if (typeof window !== "undefined") {
         localStorage.setItem("aegis_access_token", mockToken);
@@ -199,19 +193,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initAuth: async () => {
     if (typeof window !== "undefined") {
-      let token = localStorage.getItem("aegis_access_token");
-      if (!token) {
+      const token = localStorage.getItem("aegis_access_token");
+      if (token) {
+        // Verify token is still valid with backend
         try {
-          const res = await axios.post("/api/auth/login", {
-            email: "admin@bank.com",
-            password: "Admin@123"
+          const res = await axios.get("/api/auth/me", {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          token = res.data.accessToken;
-          const user = res.data.user;
-          localStorage.setItem("aegis_access_token", token!);
-          set({ user, token });
-        } catch (e) {
-          // Keep current fallback user
+          if (res.data?.user) {
+            set({ user: res.data.user, token });
+          }
+        } catch {
+          // Token invalid or expired: clear and redirect to login
+          localStorage.removeItem("aegis_access_token");
+          set({ user: null, token: null });
+          if (!window.location.pathname.includes("/login")) {
+            window.location.href = "/login";
+          }
+        }
+      } else {
+        // No token: redirect to login if not already there
+        if (!window.location.pathname.includes("/login") && window.location.pathname.includes("/workspace")) {
+          window.location.href = "/login";
         }
       }
     }
