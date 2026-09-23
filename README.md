@@ -129,7 +129,7 @@ The system enforces authentication using JWT tokens and role authorizations:
 ### 1. Clone & Install Root Dependencies
 ```bash
 git clone <repo-url>
-cd banking-churn-analytics
+cd MiniP_ChurnAnalysis
 npm install
 ```
 
