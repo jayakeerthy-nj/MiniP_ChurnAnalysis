@@ -152,6 +152,8 @@ VITE_API_URL=http://localhost:5000
 
 ### 3. Seed Database
 ```bash
+cd backend
+npm install
 npm run seed
 ```
 
