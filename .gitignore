@@ -1,55 +1,166 @@
-# Environment variables and secrets (CRITICAL: Never commit credentials)
+# =============================================================================
+# Gitignore for Financial Churn & Risk Intelligence Platform (Monorepo)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Environment Variables & Secrets (CRITICAL: Never commit credentials)
+# -----------------------------------------------------------------------------
 .env
 .env.*
-!.env.example
-backend/.env
-frontend/.env
-ml-service/.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.*
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
 
-# Dependencies
+# Whitelist safe example files
+!.env.example
+!**/.env.example
+
+# Private Keys, Certificates, Tokens & Secrets
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.pkcs12
+*.asc
+*.gpg
+*.secret
+*.secrets
+*.credentials
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Cloud & Service Provider Credentials
+service-account*.json
+*credentials*.json
+firebase-adminsdk*.json
+client_secret*.json
+.aws/
+.azure/
+.gcloud/
+
+# -----------------------------------------------------------------------------
+# 2. Node.js / JavaScript / TypeScript Dependencies & Build Artifacts
+# -----------------------------------------------------------------------------
 node_modules/
-*/node_modules/
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Build outputs
+# Next.js / Vite / React Build Outputs
 dist/
-*/dist/
+**/dist/
 build/
+**/build/
 out/
+**/out/
 .next/
-*/.next/
+**/.next/
+.vite/
+**/.vite/
 *.tsbuildinfo
 next-env.d.ts
 
-# Python virtual environments & bytecode
+# -----------------------------------------------------------------------------
+# 3. Python Virtual Environments, Bytecode & ML Artifacts
+# -----------------------------------------------------------------------------
 venv/
-*/venv/
+**/venv/
 .venv/
-*/.venv/
+**/.venv/
 env/
+**/env/
+ENV/
+**/ENV/
+
+# Python Cache & Bytecode
 __pycache__/
-*/__pycache__/
-*/**/__pycache__/
+**/__pycache__/
 *.py[cod]
-*$py.class
+*.class
+*.so
+
+# Python Testing, Linting & Coverage
 .pytest_cache/
-*/.pytest_cache/
-*.egg-info/
+**/.pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.mypy_cache/
+**/.mypy_cache/
+.ruff_cache/
+**/.ruff_cache/
+*.egg-info/
+**/*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
 
-# Logs & temporary files
-*.log
-logs/
-*.tmp
-*.swp
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
 
-# Operating System & IDE
+# -----------------------------------------------------------------------------
+# 4. Database, Local State & Large Raw Data Dumps
+# -----------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+dump.rdb
+*.sql
+*.dump
+
+# -----------------------------------------------------------------------------
+# 5. Operating System & Editor Files
+# -----------------------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-.vscode/
+Desktop.ini
+
+# Editors & IDEs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
 *.sublime-project
 *.sublime-workspace
+
+# -----------------------------------------------------------------------------
+# 6. Temporary & Log Files
+# -----------------------------------------------------------------------------
+*.log
+logs/
+**/logs/
+*.tmp
+*.temp
+*.bak
