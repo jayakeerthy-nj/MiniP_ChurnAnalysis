@@ -125,6 +125,7 @@ The system enforces authentication using JWT tokens and role authorizations:
 - **npm**: v9 or higher
 - **Python**: v3.10+ (for ML service)
 - **MongoDB**: Local instance running on `mongodb://localhost:27017/banking_churn` or MongoDB Atlas URI
+- **Docker**
 
 ### 1. Clone & Install Root Dependencies
 ```bash
@@ -150,7 +151,22 @@ GEMINI_API_KEY=your_gemini_api_key_optional
 VITE_API_URL=http://localhost:5000
 ```
 
-### 3. Seed Database
+### 3. Setup Python ML Microservice
+```bash
+cd ml-service
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cd ..
+```
+
+### 4. Start Database & Seed Data
+Start the MongoDB database container using Docker:
+```bash
+docker-compose up -d mongodb
+```
+
+Seed the database with initial customer records, transactions, and user accounts:
 ```bash
 cd backend
 npm install
@@ -169,19 +185,6 @@ This concurrently starts:
 - **ML Service** on `http://localhost:8000`
 - **Backend API** on `http://localhost:5000`
 - **React Frontend** on `http://localhost:5173`
-
-### Option B: Run Services Individually
-```bash
-# Terminal 1: Python ML Service
-npm run dev:ml
-
-# Terminal 2: Node/Express Backend
-npm run dev:backend
-
-# Terminal 3: React/Vite Frontend
-npm run dev:frontend
-```
-
 ---
 
 ## 8. Build & Verification
