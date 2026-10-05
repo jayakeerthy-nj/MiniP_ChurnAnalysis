@@ -165,6 +165,28 @@ export const customerController = {
       });
     }
 
+    // Merge features into customer object so all attributes are present
+    const customerObj = customer.toObject();
+    const featuresObj = features ? features.toObject() : {};
+    const mergedCustomer = {
+      ...customerObj,
+      ...featuresObj
+    };
+
+    // Construct riskDrivers from prediction if present
+    const riskDrivers = prediction?.topRiskFactors
+      ? [
+          ...(prediction.topRiskFactors || []).map((f: any) => ({
+            featureName: f.label || f.feature,
+            impact: f.shapValue || 0.25
+          })),
+          ...(prediction.protectiveFactors || []).map((f: any) => ({
+            featureName: f.label || f.feature,
+            impact: f.shapValue || -0.2
+          }))
+        ]
+      : [];
+
     if (req.user) {
       await logAudit({
         userId: req.user.userId,
@@ -178,12 +200,14 @@ export const customerController = {
 
     res.json({
       success: true,
-      customer,
+      customer: mergedCustomer,
       features,
       accounts,
       transactions,
       complaints,
       prediction,
+      predictions: prediction, // Alias for frontend compatibility
+      riskDrivers,
       timeline
     });
   },

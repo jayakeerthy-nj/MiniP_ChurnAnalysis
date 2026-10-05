@@ -82,7 +82,48 @@ export const CustomerDetail = () => {
     );
   }
 
-  const { customer, predictions, transactions = [], complaints = [], riskDrivers = [] } = data;
+  const {
+    customer,
+    features,
+    prediction,
+    predictions,
+    transactions = [],
+    complaints = [],
+    riskDrivers: apiRiskDrivers = []
+  } = data || {};
+
+  const customerData = {
+    ...features,
+    ...customer
+  };
+
+  const riskLevel =
+    customerData?.predictedRiskLevel ||
+    prediction?.riskLevel ||
+    predictions?.riskLevel;
+
+  const churnProb =
+    customerData?.predictedChurnProb !== undefined
+      ? customerData.predictedChurnProb
+      : prediction?.churnProbability !== undefined
+      ? prediction.churnProbability
+      : predictions?.churnProbability;
+
+  const riskDrivers =
+    apiRiskDrivers.length > 0
+      ? apiRiskDrivers
+      : (prediction || predictions)?.topRiskFactors
+      ? [
+          ...((prediction || predictions)?.topRiskFactors || []).map((f) => ({
+            featureName: f.label || f.feature,
+            impact: f.shapValue || 0.25
+          })),
+          ...((prediction || predictions)?.protectiveFactors || []).map((f) => ({
+            featureName: f.label || f.feature,
+            impact: f.shapValue || -0.2
+          }))
+        ]
+      : [];
 
   return (
     <div className="space-y-6">
@@ -104,27 +145,27 @@ export const CustomerDetail = () => {
       <div className="p-5 bg-surface border border-border rounded-md flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded bg-surface-subtle border border-border flex items-center justify-center font-mono font-extrabold text-lg text-primary shrink-0">
-            {customer?.name?.charAt(0) || "C"}
+            {customerData?.name?.charAt(0) || "C"}
           </div>
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-white tracking-tight">
-                {customer?.name}
+                {customerData?.name}
               </h1>
               <CustomerRiskBadge
-                level={customer?.predictedRiskLevel || predictions?.riskLevel}
-                probability={customer?.predictedChurnProb || predictions?.churnProbability}
+                level={riskLevel}
+                probability={churnProb}
                 size="md"
               />
             </div>
             <div className="text-xs text-muted font-mono mt-1 flex flex-wrap items-center gap-3">
-              <span>ID: <strong className="text-neutral-200">{customer?.customerId}</strong></span>
+              <span>ID: <strong className="text-neutral-200">{customerData?.customerId}</strong></span>
               <span>&bull;</span>
-              <span>AGE: <strong className="text-neutral-200">{customer?.age}</strong></span>
+              <span>AGE: <strong className="text-neutral-200">{customerData?.age}</strong></span>
               <span>&bull;</span>
-              <span>CITY: <strong className="text-neutral-200">{customer?.city}</strong></span>
+              <span>CITY: <strong className="text-neutral-200">{customerData?.city}</strong></span>
               <span>&bull;</span>
-              <span>TENURE: <strong className="text-neutral-200">{customer?.tenureMonths} Months</strong></span>
+              <span>TENURE: <strong className="text-neutral-200">{customerData?.tenureMonths} Months</strong></span>
             </div>
           </div>
         </div>
@@ -160,17 +201,17 @@ export const CustomerDetail = () => {
         <div className="bg-surface border border-border p-3.5 rounded-md">
           <div className="text-[10px] text-muted font-mono uppercase">Current Balance</div>
           <div className="text-lg font-bold text-white font-mono mt-1">
-            {formatCurrency(customer?.currentBalance)}
+            {formatCurrency(customerData?.currentBalance)}
           </div>
           <div className="text-[10px] text-muted-dark font-mono mt-0.5">
-            Credit Score: {customer?.creditScore || 720}
+            Credit Score: {customerData?.creditScore || 720}
           </div>
         </div>
 
         <div className="bg-surface border border-border p-3.5 rounded-md">
           <div className="text-[10px] text-muted font-mono uppercase">Digital Adoption</div>
           <div className="text-lg font-bold text-primary font-mono mt-1">
-            {formatPercent(customer?.digitalUsagePercentage || 0)}
+            {formatPercent(customerData?.digitalUsagePercentage || 0)}
           </div>
           <div className="text-[10px] text-muted-dark font-mono mt-0.5">
             Web & Mobile Channels
@@ -180,10 +221,10 @@ export const CustomerDetail = () => {
         <div className="bg-surface border border-border p-3.5 rounded-md">
           <div className="text-[10px] text-muted font-mono uppercase">Product Density</div>
           <div className="text-lg font-bold text-white font-mono mt-1">
-            {customer?.numberOfProducts || 1} Accounts
+            {customerData?.numberOfProducts || 1} Accounts
           </div>
           <div className="text-[10px] text-muted-dark font-mono mt-0.5">
-            Credit Card: {customer?.hasCreditCard ? "YES" : "NO"}
+            Credit Card: {customerData?.hasCreditCard ? "YES" : "NO"}
           </div>
         </div>
 
@@ -193,7 +234,7 @@ export const CustomerDetail = () => {
             {complaints.length} Grievances
           </div>
           <div className="text-[10px] text-muted-dark font-mono mt-0.5">
-            {customer?.unresolvedComplaints || 0} Unresolved
+            {customerData?.unresolvedComplaints || 0} Unresolved
           </div>
         </div>
       </div>
