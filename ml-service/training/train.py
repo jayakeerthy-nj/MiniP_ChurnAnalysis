@@ -1,4 +1,4 @@
-﻿import os
+import os
 import json
 import joblib
 import numpy as np
@@ -44,9 +44,10 @@ def train_and_evaluate():
     X = df[feature_cols]
     y = df["churn"]
 
-    # Stratified Train-Test Split (80-20)
+    # Stratified Train-Test Split (10,000 train / 2,000 test out of 12,000)
+    test_count = 2000 if len(df) == 12000 else 0.20
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.20, random_state=42, stratify=y
+        X, y, test_size=test_count, random_state=42, stratify=y
     )
 
     # Scaler

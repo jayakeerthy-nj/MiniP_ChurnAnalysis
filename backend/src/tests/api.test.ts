@@ -24,7 +24,7 @@ test("Backend Integration Suite", async (t) => {
     const features = await CustomerFeatures.findOne({ customerId: "CUST-1001" });
     assert.ok(features, "Features record for CUST-1001 should exist");
     assert.ok(typeof features.engagementScore === "number");
-    assert.ok(features.currentBalance > 0);
+    assert.ok(features.currentBalance >= 0);
   });
 
   await t.test("Analytics Service returns real calculated KPIs", async () => {

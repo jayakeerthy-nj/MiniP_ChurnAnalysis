@@ -1,114 +1,114 @@
 {
   "currentModel": "XGBoost",
   "modelVersion": "xgb-v1.4",
-  "trainingTimestamp": "2026-09-14T14:48:36.699068Z",
-  "datasetSize": 1200,
+  "trainingTimestamp": "2026-09-26T04:39:19.147354Z",
+  "datasetSize": 12000,
   "featuresCount": 29,
   "evaluationMetrics": {
     "Logistic Regression": {
-      "accuracy": 0.9875,
-      "precision": 0.9388,
-      "recall": 1.0,
-      "f1": 0.9684,
-      "rocAuc": 0.9994,
-      "prAuc": 0.9976,
+      "accuracy": 0.95,
+      "precision": 0.7599,
+      "recall": 0.9225,
+      "f1": 0.8333,
+      "rocAuc": 0.9889,
+      "prAuc": 0.956,
       "confusionMatrix": [
         [
-          191,
-          3
+          1650,
+          79
         ],
         [
-          0,
-          46
+          21,
+          250
         ]
       ]
     },
     "Random Forest": {
-      "accuracy": 0.9917,
-      "precision": 0.9783,
-      "recall": 0.9783,
-      "f1": 0.9783,
-      "rocAuc": 0.9999,
-      "prAuc": 0.9995,
+      "accuracy": 0.9735,
+      "precision": 0.8682,
+      "recall": 0.9483,
+      "f1": 0.9065,
+      "rocAuc": 0.9961,
+      "prAuc": 0.9815,
       "confusionMatrix": [
         [
-          193,
-          1
+          1690,
+          39
         ],
         [
-          1,
-          45
+          14,
+          257
         ]
       ]
     },
     "XGBoost": {
-      "accuracy": 0.9833,
-      "precision": 0.9565,
-      "recall": 0.9565,
-      "f1": 0.9565,
-      "rocAuc": 0.9984,
-      "prAuc": 0.9931,
+      "accuracy": 0.9835,
+      "precision": 0.9407,
+      "recall": 0.9373,
+      "f1": 0.939,
+      "rocAuc": 0.9977,
+      "prAuc": 0.9882,
       "confusionMatrix": [
         [
-          192,
-          2
+          1713,
+          16
         ],
         [
-          2,
-          44
+          17,
+          254
         ]
       ]
     }
   },
   "featureImportance": [
     {
-      "feature": "monthlyActiveDays",
-      "importance": 4.9803
+      "feature": "daysSinceLastTransaction",
+      "importance": 2.9261
     },
     {
       "feature": "transactionGrowthRate",
-      "importance": 1.5227
-    },
-    {
-      "feature": "averageBalance",
-      "importance": 0.3888
-    },
-    {
-      "feature": "webLoginFrequency",
-      "importance": 0.2607
-    },
-    {
-      "feature": "engagementScore",
-      "importance": 0.2512
-    },
-    {
-      "feature": "maximumBalance",
-      "importance": 0.2382
-    },
-    {
-      "feature": "creditScore",
-      "importance": 0.1942
-    },
-    {
-      "feature": "currentBalance",
-      "importance": 0.1515
-    },
-    {
-      "feature": "hasCreditCard",
-      "importance": 0.1394
+      "importance": 1.3249
     },
     {
       "feature": "balanceVolatility",
-      "importance": 0.105
+      "importance": 1.0358
+    },
+    {
+      "feature": "numberOfProducts",
+      "importance": 0.9702
+    },
+    {
+      "feature": "tenureMonths",
+      "importance": 0.8961
+    },
+    {
+      "feature": "unresolvedComplaints",
+      "importance": 0.867
+    },
+    {
+      "feature": "creditScore",
+      "importance": 0.7005
+    },
+    {
+      "feature": "digitalUsagePercentage",
+      "importance": 0.4351
+    },
+    {
+      "feature": "age",
+      "importance": 0.3462
     },
     {
       "feature": "mobileLoginFrequency",
-      "importance": 0.0797
+      "importance": 0.2813
     },
     {
-      "feature": "daysSinceLastTransaction",
-      "importance": 0.0658
+      "feature": "complaintCount",
+      "importance": 0.2135
+    },
+    {
+      "feature": "transactionsPerMonth",
+      "importance": 0.1981
     }
   ],
-  "silhouetteScore": 0.1997
+  "silhouetteScore": 0.1955
 }
