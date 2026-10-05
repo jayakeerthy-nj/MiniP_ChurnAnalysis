@@ -27,7 +27,7 @@ export const Landing = () => {
   const dockItems = [
     { icon: Home, label: "Home", onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }) },
     { icon: LineChart, label: "Risk Engine", onClick: () => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" }) },
-    { icon: Network, label: "Architecture", onClick: () => document.getElementById("architecture")?.scrollIntoView({ behavior: "smooth" }) },
+    { icon: Network, label: "Architecture", onClick: () => window.open("/architecture.html", "_blank") },
     { icon: Layers, label: "Segmentation", onClick: () => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" }) },
     { icon: Sliders, label: "Counterfactuals", onClick: () => document.getElementById("simulation")?.scrollIntoView({ behavior: "smooth" }) },
     { icon: FileSpreadsheet, label: "Reports", onClick: () => window.location.href = "/reports" },
@@ -131,7 +131,7 @@ export const Landing = () => {
             <a href="#simulation" className="hover:text-white transition-colors duration-200">
               Simulation
             </a>
-            <a href="#features" className="hover:text-white transition-colors duration-200">
+            <a href="/architecture.html" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-200">
               Architecture
             </a>
             <Link to="/reports" className="hover:text-white transition-colors duration-200">

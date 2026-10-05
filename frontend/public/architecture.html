@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Architecture — cmd. Churn Analytics</title>
+  <meta name="description" content="Architecture blueprint for the Banking Customer Risk & Churn Analytics ML platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #000000;
+      --surface: #0a0a0a;
+      --card: #111111;
+      --border: #1e1e1e;
+      --border-hover: #333;
+      --text: #e5e5e5;
+      --text-muted: #737373;
+      --text-dim: #525252;
+      --primary: #3b82f6;
+      --emerald: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --purple: #a78bfa;
+      --cyan: #22d3ee;
+      --pink: #f472b6;
+    }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Ambient glows */
+    .glow-top { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 900px; height: 500px; background: radial-gradient(ellipse, rgba(59,130,246,0.08), transparent 70%); pointer-events: none; z-index: 0; }
+    .glow-bottom { position: fixed; bottom: -200px; left: 50%; transform: translateX(-50%); width: 800px; height: 400px; background: radial-gradient(ellipse, rgba(168,85,247,0.06), transparent 70%); pointer-events: none; z-index: 0; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* Header */
+    header { padding: 20px 0; border-bottom: 1px solid var(--border); backdrop-filter: blur(12px); background: rgba(0,0,0,0.8); position: sticky; top: 0; z-index: 50; }
+    header .inner { display: flex; align-items: center; justify-content: space-between; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .logo { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; }
+    .logo span { color: var(--primary); }
+    .back-link { font-size: 12px; color: var(--text-muted); text-decoration: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; transition: all 0.2s; }
+    .back-link:hover { color: var(--text); border-color: var(--border-hover); }
+
+    /* Hero */
+    .hero { text-align: center; padding: 60px 0 40px; }
+    .hero .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); padding: 6px 16px; border-radius: 20px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 300; letter-spacing: -1px; margin-bottom: 12px; }
+    .hero p { font-size: 15px; color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 300; }
+
+    /* Section titles */
+    .section-title { margin-bottom: 32px; }
+    .section-title .label { font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: var(--primary); font-weight: 600; margin-bottom: 8px; }
+    .section-title h2 { font-size: 24px; font-weight: 400; letter-spacing: -0.5px; }
+
+    /* Pipeline Flow */
+    .pipeline { padding: 40px 0 60px; }
+    .pipeline-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .pipeline-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; position: relative; overflow: hidden; transition: all 0.3s; }
+    .pipeline-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+    .pipeline-card .stage { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+    .pipeline-card .icon-wrap { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; font-size: 18px; }
+    .pipeline-card h3 { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+    .pipeline-card p { font-size: 12px; color: var(--text-muted); font-weight: 300; line-height: 1.7; }
+    .pipeline-card .tech { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    .pipeline-card .tech span { font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-muted); }
+    .pipeline-card .connector { position: absolute; right: -10px; top: 50%; width: 20px; height: 2px; background: var(--border); }
+
+    .icon-blue { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: var(--primary); }
+    .icon-emerald { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: var(--emerald); }
+    .icon-amber { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); color: var(--amber); }
+    .icon-red { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: var(--red); }
+    .icon-purple { background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.25); color: var(--purple); }
+    .icon-cyan { background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.25); color: var(--cyan); }
+
+    /* Stack Grid */
+    .stack-section { padding: 40px 0 60px; }
+    .stack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .stack-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: all 0.3s; }
+    .stack-card:hover { border-color: var(--border-hover); }
+    .stack-card .layer-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 12px; }
+    .stack-card ul { list-style: none; }
+    .stack-card li { font-size: 13px; color: var(--text-muted); padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; align-items: center; gap: 8px; }
+    .stack-card li:last-child { border-bottom: none; }
+    .stack-card li .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Data flow diagram */
+    .flow-section { padding: 40px 0 60px; }
+    .flow-diagram { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; overflow-x: auto; }
+    .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+    .flow-node { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; text-align: center; min-width: 130px; transition: all 0.3s; }
+    .flow-node:hover { border-color: var(--border-hover); transform: scale(1.03); }
+    .flow-node .node-title { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+    .flow-node .node-sub { font-size: 10px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+    .flow-arrow { color: var(--text-dim); font-size: 18px; flex-shrink: 0; }
+    .flow-label { text-align: center; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin: 8px 0; }
+
+    /* Metrics */
+    .metrics-section { padding: 40px 0 60px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .metric-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+    .metric-card .value { font-size: 28px; font-weight: 300; margin-bottom: 4px; }
+    .metric-card .metric-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; font-size: 11px; color: var(--text-dim); }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .flow-row { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+    }
+
+    /* Animations */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: fadeUp 0.6s ease-out forwards; opacity: 0; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+    .delay-6 { animation-delay: 0.6s; }
+  </style>
+</head>
+<body>
+  <div class="glow-top"></div>
+  <div class="glow-bottom"></div>
+
+  <header>
+    <div class="inner">
+      <div class="logo">cmd<span>.</span> Architecture</div>
+      <a href="/" class="back-link">← Back to Home</a>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Hero -->
+    <div class="hero animate-in">
+      <div class="badge">⬡ System Blueprint</div>
+      <h1>Platform Architecture</h1>
+      <p>The architecture of a system or a Machine Learning project is defined as the blueprint that organizes components, defines how they interact, and maps the flow of data.</p>
+    </div>
+
+    <!-- ML Pipeline Stages -->
+    <section class="pipeline">
+      <div class="section-title animate-in delay-1">
+        <div class="label">ML Pipeline</div>
+        <h2>End-to-End Processing Stages</h2>
+      </div>
+
+      <div class="pipeline-grid">
+        <div class="pipeline-card animate-in delay-1">
+          <div class="stage">Stage 01 — Ingestion</div>
+          <div class="icon-wrap icon-blue">📡</div>
+          <h3>Data Generation & Ingestion</h3>
+          <p>Synthetic banking data generator produces 12,000 customer profiles with realistic Kaggle-inspired distributions — balances, tenure, products, digital usage, and complaints.</p>
+          <div class="tech"><span>Python</span><span>NumPy</span><span>JSON</span><span>CSV</span></div>
+        </div>
+
+        <div class="pipeline-card animate-in delay-2">
+          <div class="stage">Stage 02 — Feature Engineering</div>
+          <div class="icon-wrap icon-emerald">⚙️</div>
+          <h3>Feature Matrix Construction</h3>
+          <p>14 engineered features including engagement scores, balance velocity, credit utilization, digital adoption index, and complaint resolution rates feed the model pipeline.</p>
+          <div class="tech"><span>Pandas</span><span>StandardScaler</span><span>14 Features</span></div>
+        </div>
+
+        <div class="pipeline-card animate-in delay-3">
+          <div class="stage">Stage 03 — Classification</div>
+          <div class="icon-wrap icon-red">🛡️</div>
+          <h3>XGBoost Churn Classifier</h3>
+          <p>Gradient-boosted tree ensemble trained on 10,000 samples with stratified split. Isotonic calibration transforms raw scores into true probability estimates.</p>
+          <div class="tech"><span>XGBoost</span><span>RandomForest</span><span>LogisticRegression</span></div>
+        </div>
+
+        <div class="pipeline-card animate-in delay-4">
+          <div class="stage">Stage 04 — Segmentation</div>
+          <div class="icon-wrap icon-purple">📊</div>
+          <h3>K-Means Behavioral Clustering</h3>
+          <p>Unsupervised clustering groups customers into 5 behavioral segments — Dormant, High-Value, Active Digital, Friction-Prone, and New Growth profiles.</p>
+          <div class="tech"><span>K-Means</span><span>k=5</span><span>Silhouette Score</span></div>
+        </div>
+
+        <div class="pipeline-card animate-in delay-5">
+          <div class="stage">Stage 05 — Explainability</div>
+          <div class="icon-wrap icon-amber">🔍</div>
+          <h3>SHAP Feature Attribution</h3>
+          <p>TreeExplainer decomposes every prediction into auditable per-feature contributions, enabling transparent risk driver analysis for compliance officers.</p>
+          <div class="tech"><span>SHAP</span><span>TreeExplainer</span><span>Force Plots</span></div>
+        </div>
+
+        <div class="pipeline-card animate-in delay-6">
+          <div class="stage">Stage 06 — Synthesis</div>
+          <div class="icon-wrap icon-cyan">✨</div>
+          <h3>Gemini AI Summaries</h3>
+          <p>Generative AI narratives synthesize customer 360° dossiers into executive retention briefs with actionable recommendations and fee waiver strategies.</p>
+          <div class="tech"><span>Gemini API</span><span>Rule-based Fallback</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data Flow Diagram -->
+    <section class="flow-section">
+      <div class="section-title animate-in">
+        <div class="label">Data Flow</div>
+        <h2>Request & Response Lifecycle</h2>
+      </div>
+
+      <div class="flow-diagram animate-in delay-2">
+        <div class="flow-label">Client Layer</div>
+        <div class="flow-row">
+          <div class="flow-node" style="border-color: rgba(59,130,246,0.3);">
+            <div class="node-title" style="color: var(--primary);">React Frontend</div>
+            <div class="node-sub">Vite + TailwindCSS</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: rgba(52,211,153,0.3);">
+            <div class="node-title" style="color: var(--emerald);">Express.js API</div>
+            <div class="node-sub">REST + JWT Auth</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: rgba(251,191,36,0.3);">
+            <div class="node-title" style="color: var(--amber);">MongoDB</div>
+            <div class="node-sub">12K Customer Records</div>
+          </div>
+        </div>
+
+        <div class="flow-label" style="margin-top: 24px;">ML Inference Layer</div>
+        <div class="flow-row">
+          <div class="flow-node" style="border-color: rgba(52,211,153,0.3);">
+            <div class="node-title" style="color: var(--emerald);">Express.js API</div>
+            <div class="node-sub">ML Client Service</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: rgba(248,113,113,0.3);">
+            <div class="node-title" style="color: var(--red);">FastAPI ML Service</div>
+            <div class="node-sub">Python :8000</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: rgba(167,139,250,0.3);">
+            <div class="node-title" style="color: var(--purple);">Model Artifacts</div>
+            <div class="node-sub">.joblib Files</div>
+          </div>
+        </div>
+
+        <div class="flow-label" style="margin-top: 24px;">AI Synthesis Layer</div>
+        <div class="flow-row">
+          <div class="flow-node" style="border-color: rgba(52,211,153,0.3);">
+            <div class="node-title" style="color: var(--emerald);">Gemini Service</div>
+            <div class="node-sub">geminiService.ts</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: rgba(34,211,238,0.3);">
+            <div class="node-title" style="color: var(--cyan);">Google Gemini API</div>
+            <div class="node-sub">Generative AI</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: rgba(244,114,182,0.3);">
+            <div class="node-title" style="color: var(--pink);">Executive Briefs</div>
+            <div class="node-sub">Retention Playbooks</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section class="stack-section">
+      <div class="section-title animate-in">
+        <div class="label">Technology Stack</div>
+        <h2>Components & Dependencies</h2>
+      </div>
+
+      <div class="stack-grid">
+        <div class="stack-card animate-in delay-1">
+          <div class="layer-label" style="color: var(--primary);">Frontend</div>
+          <ul>
+            <li><span class="dot" style="background: var(--primary);"></span> React 18 + Vite 8</li>
+            <li><span class="dot" style="background: var(--primary);"></span> TailwindCSS 3</li>
+            <li><span class="dot" style="background: var(--primary);"></span> Recharts Visualizations</li>
+            <li><span class="dot" style="background: var(--primary);"></span> Framer Motion Animations</li>
+            <li><span class="dot" style="background: var(--primary);"></span> Lucide React Icons</li>
+          </ul>
+        </div>
+
+        <div class="stack-card animate-in delay-2">
+          <div class="layer-label" style="color: var(--emerald);">Backend API</div>
+          <ul>
+            <li><span class="dot" style="background: var(--emerald);"></span> Node.js + Express.js</li>
+            <li><span class="dot" style="background: var(--emerald);"></span> TypeScript</li>
+            <li><span class="dot" style="background: var(--emerald);"></span> JWT Authentication (RBAC)</li>
+            <li><span class="dot" style="background: var(--emerald);"></span> Mongoose ODM</li>
+            <li><span class="dot" style="background: var(--emerald);"></span> bcryptjs Hashing</li>
+          </ul>
+        </div>
+
+        <div class="stack-card animate-in delay-3">
+          <div class="layer-label" style="color: var(--amber);">Database</div>
+          <ul>
+            <li><span class="dot" style="background: var(--amber);"></span> MongoDB</li>
+            <li><span class="dot" style="background: var(--amber);"></span> 12,000 Customer Records</li>
+            <li><span class="dot" style="background: var(--amber);"></span> 10 Collections</li>
+            <li><span class="dot" style="background: var(--amber);"></span> JSON Seed Pipeline</li>
+          </ul>
+        </div>
+
+        <div class="stack-card animate-in delay-4">
+          <div class="layer-label" style="color: var(--red);">ML Service</div>
+          <ul>
+            <li><span class="dot" style="background: var(--red);"></span> Python 3 + FastAPI</li>
+            <li><span class="dot" style="background: var(--red);"></span> XGBoost / RandomForest / LR</li>
+            <li><span class="dot" style="background: var(--red);"></span> SHAP TreeExplainer</li>
+            <li><span class="dot" style="background: var(--red);"></span> scikit-learn + joblib</li>
+            <li><span class="dot" style="background: var(--red);"></span> K-Means Clustering</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Model Metrics -->
+    <section class="metrics-section">
+      <div class="section-title animate-in">
+        <div class="label">Model Performance</div>
+        <h2>Evaluation Benchmarks (12K Dataset)</h2>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card animate-in delay-1">
+          <div class="value" style="color: var(--emerald);">12,000</div>
+          <div class="metric-label">Total Customers</div>
+        </div>
+        <div class="metric-card animate-in delay-2">
+          <div class="value" style="color: var(--primary);">10K / 2K</div>
+          <div class="metric-label">Train / Test Split</div>
+        </div>
+        <div class="metric-card animate-in delay-3">
+          <div class="value" style="color: var(--amber);">14</div>
+          <div class="metric-label">Engineered Features</div>
+        </div>
+        <div class="metric-card animate-in delay-4">
+          <div class="value" style="color: var(--purple);">5</div>
+          <div class="metric-label">K-Means Segments</div>
+        </div>
+        <div class="metric-card animate-in delay-5">
+          <div class="value" style="color: var(--red);">3</div>
+          <div class="metric-label">Ensemble Models</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <div class="container">
+      &copy; 2026 cmd. Banking Customer Risk & Churn Analytics — Architecture Documentation
+    </div>
+  </footer>
+
+  <script>
+    // Intersection Observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.animate-in').forEach(el => {
+      el.style.animationPlayState = 'paused';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
