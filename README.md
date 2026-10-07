@@ -137,6 +137,9 @@ npm install
 ### 2. Configure Environment Variables
 
 **Root / Backend (`backend/.env` or `.env`):**
+```bash
+cp .env.example .env
+```
 ```env
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/banking_churn
