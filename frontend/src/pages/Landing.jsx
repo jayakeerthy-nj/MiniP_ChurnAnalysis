@@ -211,11 +211,10 @@ export const Landing = () => {
             className="space-y-5"
           >
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-extralight tracking-tight text-white max-w-4xl mx-auto leading-[1.08] font-grotesk drop-shadow-sm">
-              Give your banking portfolio the risk intelligence it deserves
+              Closing the gap between churn prediction and retention strategy
             </h1>
             <p className="text-base sm:text-lg text-neutral-400 max-w-2xl mx-auto font-light leading-relaxed font-grotesk drop-shadow-sm">
-              Calibrated customer churn modeling, unsupervised behavioral clustering,
-              and explainable counterfactual simulation built for institutional banking.
+               A decision-support system for banking
             </p>
           </motion.div>
 
@@ -240,7 +239,7 @@ export const Landing = () => {
                 to="/dashboard"
                 className="w-full sm:w-auto bg-neutral-900/90 hover:bg-neutral-800 text-neutral-200 border border-neutral-800 font-medium text-sm px-6 py-3.5 rounded-lg backdrop-blur-md transition-all font-grotesk flex items-center justify-center gap-2 shadow-lg"
               >
-                <span>Live Terminal Preview</span>
+                <span>Simulated Terminal Preview</span>
               </Link>
             </motion.div>
           </motion.div>
@@ -300,9 +299,9 @@ export const Landing = () => {
             <div className="text-[11px] font-mono text-neutral-400 bg-black/60 px-4 py-1 rounded border border-neutral-800">
               https://bank-analytics.internal/dashboard
             </div>
-            <div className="text-xs font-mono text-emerald-400 flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>LIVE ML PROD</span>
+            <div className="text-xs font-mono text-amber-400 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>DEMO ML PROD (SIMULATED)</span>
             </div>
           </div>
 
@@ -386,7 +385,7 @@ export const Landing = () => {
             </div>
             <h3 className="text-base font-normal text-white">What-If Counterfactuals</h3>
             <p className="text-xs text-neutral-400 leading-relaxed font-light">
-              Interactively adjust digital usage, product holdings, balance tiers, and grievance resolutions to project live churn reduction.
+              Interactively adjust digital usage, product holdings, balance tiers, and grievance resolutions to project churn reduction sensitivity.
             </p>
           </div>
 

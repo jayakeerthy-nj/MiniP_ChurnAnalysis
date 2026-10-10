@@ -49,9 +49,9 @@ export const Simulator = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        category="PREDICTIVE BEHAVIORAL MODELING"
-        title="What-If Counterfactual Churn Simulator"
-        subtitle="Live counterfactual simulation evaluating how adjustments in customer behavior, digital activity, and service friction shift calibrated attrition probabilities in the ML model."
+        category="MODEL SENSITIVITY ANALYSIS"
+        title="What-If Churn Simulator"
+        subtitle="Explore how changes in customer behavioral inputs affect the model's churn probability output. This is a model sensitivity test — not a causal or uplift prediction."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -167,8 +167,15 @@ export const Simulator = () => {
                 icon={Sliders}
                 className="w-full mt-3 font-mono uppercase tracking-wider text-xs"
               >
-                Execute ML Counterfactual
+                Run What-If Analysis
               </Button>
+
+              {/* Methodology Disclaimer (Red Flag #6) */}
+              <div className="mt-3 p-2.5 bg-amber-950/30 border border-amber-600/20 rounded text-[10px] text-amber-300/80 font-sans leading-relaxed">
+                <strong>⚠ Note:</strong> This simulator modifies input features and re-evaluates the ML model.
+                It shows <em>model sensitivity</em>, not guaranteed real-world outcomes.
+                Without intervention/treatment history data, causal claims cannot be made.
+              </div>
             </div>
           </Card>
         </div>
@@ -250,11 +257,11 @@ export const Simulator = () => {
 
                 {/* Explanation text */}
                 <div className="p-3 bg-surface-subtle border border-border rounded text-xs text-neutral-300 font-sans leading-relaxed">
-                  <strong>ML Inference: </strong>
+                  <strong>Model Sensitivity Note: </strong>
                   {result.explanation ||
-                    `Modifying digital usage to ${digitalPct}% and maintaining ${txPerMonth} monthly transactions produces an estimated churn probability of ${(
+                    `Modifying digital usage to ${digitalPct}% and maintaining ${txPerMonth} monthly transactions produces a model-estimated churn probability of ${(
                       result.simulatedChurnProb * 100
-                    ).toFixed(1)}%.`}
+                    ).toFixed(1)}%. This reflects model sensitivity, not a causal guarantee.`}
                 </div>
               </div>
             )}

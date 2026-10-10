@@ -113,14 +113,14 @@ def generate_synthetic_bank_data(num_customers=12000, seed=42):
         customers.append(customer)
 
         # Kaggle realistic Balance distribution: ~36% zero balance, rest 10k to 250k
-        is_zero_balance = random.random() < 0.36
+        # NOTE: Balance is influenced by risk propensity (not churn label) to avoid data leakage
+        is_zero_balance = random.random() < (0.36 + risk_score_latent * 0.15)  # higher risk -> slightly more likely zero balance
         if is_zero_balance:
             base_balance = 0.0
         else:
-            base_balance = float(round(np.clip(np.random.normal(110000, 45000), 5000, 250000), 2))
-        
-        if churn_label == 1 and base_balance > 0:
-            base_balance = float(round(base_balance * random.uniform(0.05, 0.40), 2))
+            # Risk-influenced balance: higher risk slightly reduces balance, but with substantial noise
+            risk_balance_factor = max(0.3, 1.0 - risk_score_latent * 0.4 + np.random.normal(0, 0.2))
+            base_balance = float(round(np.clip(np.random.normal(110000, 45000) * risk_balance_factor, 5000, 250000), 2))
 
         primary_acc_type = "SALARY" if occupation in ["Salaried Professional", "Software Engineer"] else "SAVINGS"
         acc_id = f"ACC-{20000 + i}"
@@ -136,6 +136,8 @@ def generate_synthetic_bank_data(num_customers=12000, seed=42):
         accounts.append(account)
 
         # Generate lightweight transaction summary metrics fast
+        # NOTE: Features are driven by risk_score_latent (not churn_label) to prevent data leakage.
+        # Noise is added so the relationship is probabilistic, not deterministic.
         curr_bal = base_balance
         if base_balance == 0.0:
             avg_bal = 0.0
@@ -143,24 +145,29 @@ def generate_synthetic_bank_data(num_customers=12000, seed=42):
             max_bal = float(round(random.uniform(0.0, 5000.0), 2)) if random.random() < 0.2 else 0.0
             bal_volatility = 0.0
             tx_per_month = float(round(random.uniform(0.0, 2.0), 1))
-            days_since_last_tx = random.randint(45, 180)
+            # Days since last tx: influenced by risk propensity with noise, not churn label
+            days_since_last_tx = int(np.clip(30 + risk_score_latent * 80 + np.random.normal(0, 25), 10, 180))
             monthly_active_days = random.randint(0, 3)
-            tx_growth_rate = float(round(random.uniform(-0.8, 0.0), 2))
+            tx_growth_rate = float(round(np.clip(np.random.normal(-0.3 - risk_score_latent * 0.3, 0.2), -0.9, 0.1), 3))
             avg_tx_val = 0.0
             monthly_tx_val = 0.0
         else:
             avg_bal = float(round(np.clip(base_balance * random.uniform(0.85, 1.15), 0.0, 300000.0), 2))
             min_bal = float(round(np.clip(base_balance * random.uniform(0.40, 0.90), 0.0, 250000.0), 2))
             max_bal = float(round(np.clip(base_balance * random.uniform(1.05, 1.40), base_balance, 350000.0), 2))
-            bal_volatility = float(round(random.uniform(0.05, 0.45), 3))
-            tx_per_month = float(round(max(0.5, base_monthly_tx), 1))
-            days_since_last_tx = random.randint(1, 30) if churn_label == 0 else random.randint(25, 120)
+            # Volatility: slightly higher for riskier profiles, but noisy
+            bal_volatility = float(round(np.clip(random.uniform(0.05, 0.30) + risk_score_latent * 0.15 + np.random.normal(0, 0.05), 0.01, 0.50), 3))
+            tx_per_month = float(round(max(0.5, base_monthly_tx + np.random.normal(0, 2)), 1))
+            # Days since last tx: risk-influenced with significant noise
+            days_since_last_tx = int(np.clip(5 + risk_score_latent * 50 + np.random.normal(0, 15), 1, 120))
             monthly_active_days = int(np.clip(tx_per_month * random.uniform(0.8, 1.2), 0, 30))
-            tx_growth_rate = float(round(random.uniform(-0.15, 0.35) if churn_label == 0 else random.uniform(-0.85, -0.10), 3))
+            # Growth rate: risk-influenced with noise (not deterministic from churn label)
+            tx_growth_rate = float(round(np.clip(np.random.normal(0.10 - risk_score_latent * 0.5, 0.15), -0.90, 0.40), 3))
             avg_tx_val = float(round(random.uniform(800.0, 8500.0), 2))
             monthly_tx_val = float(round(avg_tx_val * tx_per_month, 2))
 
         # Complaints
+        # NOTE: Complaint resolution influenced by risk propensity (not churn label) to avoid leakage
         comp_count = 0
         comp_last_90 = 0
         unresolved_comp = 0
@@ -168,12 +175,13 @@ def generate_synthetic_bank_data(num_customers=12000, seed=42):
         if complaint_tendency > 0.35:
             comp_count = random.choices([1, 2, 3], weights=[0.6, 0.3, 0.1])[0]
             comp_last_90 = random.randint(0, comp_count)
-            if churn_label == 1:
+            # Higher risk propensity -> higher chance of unresolved complaints
+            if random.random() < risk_score_latent * 0.8:
                 unresolved_comp = random.randint(1, comp_count)
-                avg_res_time = float(round(random.uniform(48.0, 144.0), 1))
+                avg_res_time = float(round(random.uniform(36.0, 144.0), 1))
             else:
                 unresolved_comp = 0
-                avg_res_time = float(round(random.uniform(6.0, 36.0), 1))
+                avg_res_time = float(round(random.uniform(6.0, 48.0), 1))
 
         # Digital usage
         digital_usage_pct = float(round(digital_inclination * 100.0, 1))

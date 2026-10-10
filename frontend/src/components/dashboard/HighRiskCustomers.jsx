@@ -84,6 +84,11 @@ export const HighRiskCustomers = ({ watchlist = [] }) => {
           </tbody>
         </table>
       </div>
+      <div className="p-2 border-t border-border bg-surface-subtle text-center">
+        <p className="text-[10px] text-muted-dark font-mono italic">
+          ⚠ Displayed customers are illustrative examples from the dataset. High-risk classification is model-dependent and based on synthetic data.
+        </p>
+      </div>
     </Card>
   );
 };

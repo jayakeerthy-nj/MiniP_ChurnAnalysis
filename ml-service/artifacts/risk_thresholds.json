@@ -1,0 +1,6 @@
+{
+  "LOW_MEDIUM": 0.3517,
+  "MEDIUM_HIGH": 0.5861,
+  "HIGH_CRITICAL": 0.8,
+  "methodology": "Thresholds derived from F1-optimal classification boundary and probability distribution percentiles. Should be adjusted based on business retention capacity and intervention cost."
+}

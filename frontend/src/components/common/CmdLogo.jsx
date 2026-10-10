@@ -23,8 +23,6 @@ export const CmdLogo = ({ size = "md", showSubtitle = true, className = "" }) =>
             isSmall ? "text-xs" : isLarge ? "text-lg" : "text-sm"
           }`}
         >
-          <span>cmd</span>
-          <span className="text-emerald-400 text-base">.</span>
           <span className="text-[10px] text-muted font-sans font-medium uppercase tracking-widest ml-1 hidden sm:inline">
             Risk & Churn
           </span>

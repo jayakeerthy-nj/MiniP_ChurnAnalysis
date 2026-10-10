@@ -9,9 +9,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, average_precision_score, confusion_matrix, silhouette_score
+    roc_auc_score, average_precision_score, confusion_matrix,
+    silhouette_score, precision_recall_curve
 )
 from xgboost import XGBClassifier
 import shap
@@ -44,11 +46,37 @@ def train_and_evaluate():
     X = df[feature_cols]
     y = df["churn"]
 
-    # Stratified Train-Test Split (10,000 train / 2,000 test out of 12,000)
-    test_count = 2000 if len(df) == 12000 else 0.20
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_count, random_state=42, stratify=y
-    )
+    # === CLASS IMBALANCE DOCUMENTATION (Red Flag #2) ===
+    churn_count = int(y.sum())
+    no_churn_count = int(len(y) - churn_count)
+    imbalance_ratio = round(no_churn_count / max(churn_count, 1), 2)
+    print(f"Class distribution: {no_churn_count} non-churn / {churn_count} churn (ratio {imbalance_ratio}:1)")
+    print("NOTE: PR-AUC is the primary evaluation metric for imbalanced churn data.")
+
+    # === SPLIT STRATEGY (Red Flag #3) ===
+    # Option A: Stratified random split (default, reproducible)
+    # Option B: Tenure-based chronological holdout (more realistic for temporal problems)
+    split_strategy = os.environ.get("SPLIT_STRATEGY", "stratified")  # 'stratified' or 'temporal'
+
+    if split_strategy == "temporal":
+        # Temporal split: customers with shorter tenure (newer) as test set
+        # This simulates predicting churn for newer customers based on older customer patterns
+        print("Using TEMPORAL split: older tenure -> train, newer tenure -> test")
+        tenure_threshold = df["tenureMonths"].quantile(0.80)  # bottom 20% tenure = test
+        train_mask = df["tenureMonths"] >= tenure_threshold
+        test_mask = df["tenureMonths"] < tenure_threshold
+        X_train, X_test = X[train_mask], X[test_mask]
+        y_train, y_test = y[train_mask], y[test_mask]
+    else:
+        # Stratified split (preserves class ratio in both sets)
+        print("Using STRATIFIED random split (preserves class distribution)")
+        test_count = 2000 if len(df) == 12000 else 0.20
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_count, random_state=42, stratify=y
+        )
+
+    print(f"Train: {len(X_train)} samples | Test: {len(X_test)} samples")
+    print(f"Train churn rate: {y_train.mean():.3f} | Test churn rate: {y_test.mean():.3f}")
 
     # Scaler
     scaler = StandardScaler()
@@ -82,10 +110,19 @@ def train_and_evaluate():
     xgb_preds = xgb.predict(X_test)
     xgb_probs = xgb.predict_proba(X_test)[:, 1]
 
+    # === PROBABILITY CALIBRATION (Red Flag #10) ===
+    # Platt scaling ensures predicted probabilities are well-calibrated
+    print("Calibrating XGBoost probabilities with Platt scaling (sigmoid)...")
+    xgb_calibrated = CalibratedClassifierCV(xgb, cv=5, method="sigmoid")
+    xgb_calibrated.fit(X_train, y_train)
+    xgb_cal_probs = xgb_calibrated.predict_proba(X_test)[:, 1]
+    xgb_cal_preds = (xgb_cal_probs >= 0.5).astype(int)
+
     models = {
         "Logistic Regression": (lr_preds, lr_probs),
         "Random Forest": (rf_preds, rf_probs),
-        "XGBoost": (xgb_preds, xgb_probs)
+        "XGBoost (Raw)": (xgb_preds, xgb_probs),
+        "XGBoost (Calibrated)": (xgb_cal_preds, xgb_cal_probs)
     }
 
     metrics = {}
@@ -108,14 +145,40 @@ def train_and_evaluate():
             "confusionMatrix": cm
         }
         print(f"--- {name} ---")
-        print(f"ROC-AUC: {roc:.4f} | PR-AUC: {pr_auc:.4f} | F1: {f1:.4f} | Recall: {rec:.4f} | Precision: {prec:.4f}")
+        # PR-AUC listed first as it is the primary metric for imbalanced data
+        print(f"PR-AUC: {pr_auc:.4f} | ROC-AUC: {roc:.4f} | F1: {f1:.4f} | Recall: {rec:.4f} | Precision: {prec:.4f}")
 
-    # Best model selection based on ROC-AUC + PR-AUC for churn
-    best_model_name = "XGBoost" # XGBoost selected
-    best_model = xgb
+    # === BEST MODEL SELECTION ===
+    # Calibrated XGBoost is the production model (reliable probabilities)
+    best_model_name = "XGBoost (Calibrated)"
+    best_model = xgb_calibrated
+    best_raw_model = xgb  # for SHAP (TreeExplainer needs the raw model)
+
+    # === THRESHOLD OPTIMIZATION (Red Flag #11) ===
+    # Find optimal threshold using F1-score on the precision-recall curve
+    precision_arr, recall_arr, thresholds_arr = precision_recall_curve(y_test, xgb_cal_probs)
+    f1_scores = 2 * (precision_arr[:-1] * recall_arr[:-1]) / (precision_arr[:-1] + recall_arr[:-1] + 1e-8)
+    optimal_idx = np.argmax(f1_scores)
+    optimal_threshold = float(thresholds_arr[optimal_idx])
+    print(f"\nOptimal classification threshold (max F1): {optimal_threshold:.4f}")
+    print(f"At threshold: Precision={precision_arr[optimal_idx]:.4f}, Recall={recall_arr[optimal_idx]:.4f}, F1={f1_scores[optimal_idx]:.4f}")
+
+    # Risk tier thresholds derived from probability distribution percentiles
+    # These should ideally be tuned per business constraints (retention capacity, cost)
+    p75 = float(np.percentile(xgb_cal_probs, 75))
+    p90 = float(np.percentile(xgb_cal_probs, 90))
+    p95 = float(np.percentile(xgb_cal_probs, 95))
+    risk_thresholds = {
+        "LOW_MEDIUM": round(optimal_threshold * 0.6, 4),
+        "MEDIUM_HIGH": round(optimal_threshold, 4),
+        "HIGH_CRITICAL": round(min(p95, 0.80), 4),
+        "methodology": "Thresholds derived from F1-optimal classification boundary and probability distribution percentiles. Should be adjusted based on business retention capacity and intervention cost."
+    }
+    print(f"Risk Thresholds: LOW<{risk_thresholds['LOW_MEDIUM']} | MEDIUM<{risk_thresholds['MEDIUM_HIGH']} | HIGH<{risk_thresholds['HIGH_CRITICAL']} | CRITICAL")
 
     # Save Models & Scaler
     joblib.dump(best_model, os.path.join(artifacts_dir, "model.joblib"))
+    joblib.dump(best_raw_model, os.path.join(artifacts_dir, "model_raw.joblib"))
     joblib.dump(scaler, os.path.join(artifacts_dir, "scaler.joblib"))
     joblib.dump(rf, os.path.join(artifacts_dir, "rf_model.joblib"))
     joblib.dump(lr, os.path.join(artifacts_dir, "lr_model.joblib"))
@@ -123,9 +186,13 @@ def train_and_evaluate():
     with open(os.path.join(artifacts_dir, "features.json"), "w") as f:
         json.dump(feature_cols, f)
 
-    # SHAP Explainer
-    print("Fitting SHAP TreeExplainer on XGBoost...")
-    explainer = shap.TreeExplainer(best_model)
+    # Save risk thresholds for use by the prediction API
+    with open(os.path.join(artifacts_dir, "risk_thresholds.json"), "w") as f:
+        json.dump(risk_thresholds, f, indent=2)
+
+    # SHAP Explainer (must use raw tree model, not calibrated wrapper)
+    print("Fitting SHAP TreeExplainer on raw XGBoost (pre-calibration)...")
+    explainer = shap.TreeExplainer(best_raw_model)
     joblib.dump(explainer, os.path.join(artifacts_dir, "shap_explainer.joblib"))
 
     # Global feature importance via SHAP
@@ -216,16 +283,56 @@ def train_and_evaluate():
     with open(os.path.join(artifacts_dir, "segments.json"), "w") as f:
         json.dump(cluster_profiles, f, indent=2)
 
-    # Save model version metadata
+    # Save model version metadata with full methodology disclosure
     version_info = {
-        "currentModel": "XGBoost",
-        "modelVersion": "xgb-v1.4",
+        "currentModel": "XGBoost (Calibrated)",
+        "modelVersion": "xgb-v2.0",
         "trainingTimestamp": datetime.utcnow().isoformat() + "Z",
         "datasetSize": len(df),
+        "trainSize": len(X_train),
+        "testSize": len(X_test),
         "featuresCount": len(feature_cols),
+        "splitStrategy": split_strategy,
+        "classImbalance": {
+            "churnCount": churn_count,
+            "noChurnCount": no_churn_count,
+            "imbalanceRatio": imbalance_ratio,
+            "note": "PR-AUC is the primary metric due to class imbalance. Accuracy alone is misleading."
+        },
+        "calibration": {
+            "method": "Platt Scaling (Sigmoid)",
+            "note": "Post-hoc probability calibration ensures predicted probabilities approximate true churn rates."
+        },
+        "riskThresholds": risk_thresholds,
+        "optimalThreshold": round(optimal_threshold, 4),
         "evaluationMetrics": metrics,
+        "primaryMetric": "prAuc",
         "featureImportance": feature_importance[:12],
-        "silhouetteScore": round(sil_score, 4)
+        "silhouetteScore": round(sil_score, 4),
+        "modelArchitecture": {
+            "baseline": "Logistic Regression (interpretable reference)",
+            "ensemble": "Random Forest (variance reduction)",
+            "primary": "XGBoost + Sigmoid Calibration (production model)",
+            "note": "Three models total. No stacking, no deep learning, no survival/uplift models — the dataset does not support them."
+        },
+        "datasetLimitations": {
+            "scope": "Synthetic tabular dataset with 12,000 customer-level records and 29 engineered features.",
+            "missingData": [
+                "No real transaction-level logs (individual tx records)",
+                "No complaint free-text (NLP features not possible)",
+                "No temporal event timestamps for survival analysis",
+                "No intervention/treatment history for causal/uplift modeling",
+                "No social graph data for GNN-based models"
+            ],
+            "implications": "Sequence models (LSTM/Transformer), survival models (Cox/DeepSurv), uplift models, BERT, and GNNs cannot be meaningfully applied to this dataset.",
+            "syntheticDisclosure": "All customer data is synthetically generated for demonstration purposes. Results are not representative of real banking populations."
+        },
+        "benchmarkMethodology": {
+            "note": "All model comparisons use identical train/test split, identical feature set, and identical evaluation metrics.",
+            "splitSeed": 42,
+            "testSetSize": len(X_test),
+            "metricsUsed": ["PR-AUC", "ROC-AUC", "F1", "Precision", "Recall", "Confusion Matrix"]
+        }
     }
 
     with open(os.path.join(artifacts_dir, "metrics.json"), "w") as f:
@@ -234,8 +341,12 @@ def train_and_evaluate():
     # Also update customer_features with cluster assignments & initial predictions
     df_pred_probs = best_model.predict_proba(df[feature_cols])[:, 1]
     df["predictedChurnProb"] = [round(float(p), 4) for p in df_pred_probs]
+    # Use optimized thresholds (Red Flag #11) instead of arbitrary hardcoded cutoffs
+    t_low = risk_thresholds["LOW_MEDIUM"]
+    t_med = risk_thresholds["MEDIUM_HIGH"]
+    t_high = risk_thresholds["HIGH_CRITICAL"]
     df["predictedRiskLevel"] = [
-        "CRITICAL" if p >= 0.80 else "HIGH" if p >= 0.60 else "MEDIUM" if p >= 0.30 else "LOW"
+        "CRITICAL" if p >= t_high else "HIGH" if p >= t_med else "MEDIUM" if p >= t_low else "LOW"
         for p in df_pred_probs
     ]
     out_features_json = os.environ.get("CUSTOMER_FEATURES_JSON", os.path.join(base_dir, "..", "data", "customerFeatures.json"))

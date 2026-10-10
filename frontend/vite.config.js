@@ -17,22 +17,13 @@ export default defineConfig({
     host: "0.0.0.0",
     proxy: {
       "/api": {
-        target: process.env.VITE_API_URL || "http://localhost:5000",
+        target: process.env.VITE_API_URL || "http://localhost:5001",
         changeOrigin: true,
         secure: false
       }
     }
   },
   build: {
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          charts: ["recharts"],
-          icons: ["lucide-react"]
-        }
-      }
-    }
+    chunkSizeWarningLimit: 1000
   }
 });

@@ -1,114 +1,184 @@
 {
-  "currentModel": "XGBoost",
-  "modelVersion": "xgb-v1.4",
-  "trainingTimestamp": "2026-09-26T04:39:19.147354Z",
+  "currentModel": "XGBoost (Calibrated)",
+  "modelVersion": "xgb-v2.0",
+  "trainingTimestamp": "2026-10-10T08:39:14.063579Z",
   "datasetSize": 12000,
+  "trainSize": 10000,
+  "testSize": 2000,
   "featuresCount": 29,
+  "splitStrategy": "stratified",
+  "classImbalance": {
+    "churnCount": 1606,
+    "noChurnCount": 10394,
+    "imbalanceRatio": 6.47,
+    "note": "PR-AUC is the primary metric due to class imbalance. Accuracy alone is misleading."
+  },
+  "calibration": {
+    "method": "Platt Scaling (Sigmoid)",
+    "note": "Post-hoc probability calibration ensures predicted probabilities approximate true churn rates."
+  },
+  "riskThresholds": {
+    "LOW_MEDIUM": 0.3517,
+    "MEDIUM_HIGH": 0.5861,
+    "HIGH_CRITICAL": 0.8,
+    "methodology": "Thresholds derived from F1-optimal classification boundary and probability distribution percentiles. Should be adjusted based on business retention capacity and intervention cost."
+  },
+  "optimalThreshold": 0.5861,
   "evaluationMetrics": {
     "Logistic Regression": {
-      "accuracy": 0.95,
-      "precision": 0.7599,
-      "recall": 0.9225,
-      "f1": 0.8333,
-      "rocAuc": 0.9889,
-      "prAuc": 0.956,
+      "accuracy": 0.826,
+      "precision": 0.4265,
+      "recall": 0.8657,
+      "f1": 0.5714,
+      "rocAuc": 0.9212,
+      "prAuc": 0.6804,
       "confusionMatrix": [
         [
-          1650,
-          79
+          1420,
+          312
         ],
         [
-          21,
-          250
+          36,
+          232
         ]
       ]
     },
     "Random Forest": {
-      "accuracy": 0.9735,
-      "precision": 0.8682,
-      "recall": 0.9483,
-      "f1": 0.9065,
-      "rocAuc": 0.9961,
-      "prAuc": 0.9815,
+      "accuracy": 0.876,
+      "precision": 0.5218,
+      "recall": 0.8918,
+      "f1": 0.6584,
+      "rocAuc": 0.958,
+      "prAuc": 0.7995,
       "confusionMatrix": [
         [
-          1690,
-          39
+          1513,
+          219
         ],
         [
-          14,
-          257
+          29,
+          239
         ]
       ]
     },
-    "XGBoost": {
-      "accuracy": 0.9835,
-      "precision": 0.9407,
-      "recall": 0.9373,
-      "f1": 0.939,
-      "rocAuc": 0.9977,
-      "prAuc": 0.9882,
+    "XGBoost (Raw)": {
+      "accuracy": 0.9205,
+      "precision": 0.6501,
+      "recall": 0.8806,
+      "f1": 0.748,
+      "rocAuc": 0.9785,
+      "prAuc": 0.901,
       "confusionMatrix": [
         [
-          1713,
-          16
+          1605,
+          127
         ],
         [
-          17,
-          254
+          32,
+          236
+        ]
+      ]
+    },
+    "XGBoost (Calibrated)": {
+      "accuracy": 0.945,
+      "precision": 0.7926,
+      "recall": 0.7985,
+      "f1": 0.7955,
+      "rocAuc": 0.9781,
+      "prAuc": 0.8982,
+      "confusionMatrix": [
+        [
+          1676,
+          56
+        ],
+        [
+          54,
+          214
         ]
       ]
     }
   },
+  "primaryMetric": "prAuc",
   "featureImportance": [
     {
-      "feature": "daysSinceLastTransaction",
-      "importance": 2.9261
+      "feature": "tenureMonths",
+      "importance": 1.4393
     },
     {
-      "feature": "transactionGrowthRate",
-      "importance": 1.3249
-    },
-    {
-      "feature": "balanceVolatility",
-      "importance": 1.0358
+      "feature": "averageResolutionTime",
+      "importance": 1.3642
     },
     {
       "feature": "numberOfProducts",
-      "importance": 0.9702
-    },
-    {
-      "feature": "tenureMonths",
-      "importance": 0.8961
-    },
-    {
-      "feature": "unresolvedComplaints",
-      "importance": 0.867
+      "importance": 1.1696
     },
     {
       "feature": "creditScore",
-      "importance": 0.7005
-    },
-    {
-      "feature": "digitalUsagePercentage",
-      "importance": 0.4351
-    },
-    {
-      "feature": "age",
-      "importance": 0.3462
+      "importance": 0.6832
     },
     {
       "feature": "mobileLoginFrequency",
-      "importance": 0.2813
+      "importance": 0.5016
     },
     {
-      "feature": "complaintCount",
-      "importance": 0.2135
+      "feature": "age",
+      "importance": 0.3969
     },
     {
-      "feature": "transactionsPerMonth",
-      "importance": 0.1981
+      "feature": "digitalUsagePercentage",
+      "importance": 0.3601
+    },
+    {
+      "feature": "daysSinceLastTransaction",
+      "importance": 0.2358
+    },
+    {
+      "feature": "transactionGrowthRate",
+      "importance": 0.1925
+    },
+    {
+      "feature": "balanceVolatility",
+      "importance": 0.1621
+    },
+    {
+      "feature": "engagementScore",
+      "importance": 0.104
+    },
+    {
+      "feature": "digitalSessionDuration",
+      "importance": 0.0756
     }
   ],
-  "silhouetteScore": 0.1955
+  "silhouetteScore": 0.1834,
+  "modelArchitecture": {
+    "baseline": "Logistic Regression (interpretable reference)",
+    "ensemble": "Random Forest (variance reduction)",
+    "primary": "XGBoost + Sigmoid Calibration (production model)",
+    "note": "Three models total. No stacking, no deep learning, no survival/uplift models \u2014 the dataset does not support them."
+  },
+  "datasetLimitations": {
+    "scope": "Synthetic tabular dataset with 12,000 customer-level records and 29 engineered features.",
+    "missingData": [
+      "No real transaction-level logs (individual tx records)",
+      "No complaint free-text (NLP features not possible)",
+      "No temporal event timestamps for survival analysis",
+      "No intervention/treatment history for causal/uplift modeling",
+      "No social graph data for GNN-based models"
+    ],
+    "implications": "Sequence models (LSTM/Transformer), survival models (Cox/DeepSurv), uplift models, BERT, and GNNs cannot be meaningfully applied to this dataset.",
+    "syntheticDisclosure": "All customer data is synthetically generated for demonstration purposes. Results are not representative of real banking populations."
+  },
+  "benchmarkMethodology": {
+    "note": "All model comparisons use identical train/test split, identical feature set, and identical evaluation metrics.",
+    "splitSeed": 42,
+    "testSetSize": 2000,
+    "metricsUsed": [
+      "PR-AUC",
+      "ROC-AUC",
+      "F1",
+      "Precision",
+      "Recall",
+      "Confusion Matrix"
+    ]
+  }
 }

@@ -1,8 +1,9 @@
-﻿import os
+import os
 import json
 import joblib
 import numpy as np
 import pandas as pd
+import shap
 from typing import Dict, Any, List, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,7 +26,15 @@ ARTIFACTS_DIR = os.environ.get("ARTIFACTS_DIR", default_artifacts_dir)
 print(f"Loading ML artifacts from {ARTIFACTS_DIR}...")
 model = joblib.load(os.path.join(ARTIFACTS_DIR, "model.joblib"))
 scaler = joblib.load(os.path.join(ARTIFACTS_DIR, "scaler.joblib"))
-shap_explainer = joblib.load(os.path.join(ARTIFACTS_DIR, "shap_explainer.joblib"))
+
+# Load raw tree model for SHAP (calibrated wrapper is not compatible with TreeExplainer)
+raw_model_path = os.path.join(ARTIFACTS_DIR, "model_raw.joblib")
+if os.path.exists(raw_model_path):
+    raw_model = joblib.load(raw_model_path)
+    shap_explainer = shap.TreeExplainer(raw_model)
+else:
+    shap_explainer = joblib.load(os.path.join(ARTIFACTS_DIR, "shap_explainer.joblib"))
+
 kmeans = joblib.load(os.path.join(ARTIFACTS_DIR, "kmeans_model.joblib"))
 cluster_scaler = joblib.load(os.path.join(ARTIFACTS_DIR, "cluster_scaler.joblib"))
 
@@ -37,6 +46,20 @@ with open(os.path.join(ARTIFACTS_DIR, "metrics.json"), "r") as f:
 
 with open(os.path.join(ARTIFACTS_DIR, "segments.json"), "r") as f:
     segments_info = json.load(f)
+
+# Load risk thresholds (Red Flag #11: business-optimized thresholds)
+risk_thresholds_path = os.path.join(ARTIFACTS_DIR, "risk_thresholds.json")
+if os.path.exists(risk_thresholds_path):
+    with open(risk_thresholds_path, "r") as f:
+        risk_thresholds = json.load(f)
+    THRESHOLD_LOW_MED = risk_thresholds.get("LOW_MEDIUM", 0.30)
+    THRESHOLD_MED_HIGH = risk_thresholds.get("MEDIUM_HIGH", 0.50)
+    THRESHOLD_HIGH_CRIT = risk_thresholds.get("HIGH_CRITICAL", 0.80)
+else:
+    # Fallback if thresholds file not found
+    THRESHOLD_LOW_MED = 0.30
+    THRESHOLD_MED_HIGH = 0.50
+    THRESHOLD_HIGH_CRIT = 0.80
 
 FEATURE_LABELS = {
     "currentBalance": "Current Account Balance",
@@ -71,11 +94,12 @@ FEATURE_LABELS = {
 }
 
 def get_risk_level(prob: float) -> str:
-    if prob >= 0.80:
+    """Classify risk level using optimized thresholds (not arbitrary cutoffs)."""
+    if prob >= THRESHOLD_HIGH_CRIT:
         return "CRITICAL"
-    elif prob >= 0.60:
+    elif prob >= THRESHOLD_MED_HIGH:
         return "HIGH"
-    elif prob >= 0.30:
+    elif prob >= THRESHOLD_LOW_MED:
         return "MEDIUM"
     return "LOW"
 
@@ -99,7 +123,13 @@ def health_check():
 def get_model_metrics():
     return {
         "modelVersions": metrics_info,
-        "segments": segments_info
+        "segments": segments_info,
+        "riskThresholds": {
+            "LOW_MEDIUM": THRESHOLD_LOW_MED,
+            "MEDIUM_HIGH": THRESHOLD_MED_HIGH,
+            "HIGH_CRITICAL": THRESHOLD_HIGH_CRIT
+        },
+        "benchmarkNote": metrics_info.get("benchmarkMethodology", {}).get("note", "All comparisons use identical data split and metrics.")
     }
 
 @app.post("/predict")
@@ -151,7 +181,9 @@ def predict_churn(payload: CustomerFeatureVector):
             "topRiskFactors": top_risk_factors,
             "protectiveFactors": protective_factors,
             "allShapFactors": sorted(factors, key=lambda x: abs(x["shapValue"]), reverse=True)[:10],
-            "modelVersion": metrics_info.get("modelVersion", "xgb-v1.4")
+            "modelVersion": metrics_info.get("modelVersion", "xgb-v2.0"),
+            "shapDisclaimer": "SHAP values indicate feature contributions to the model prediction. They do not imply causation — changing a feature value may not change the actual churn outcome.",
+            "calibrationNote": "Probabilities are calibrated using Platt scaling. A predicted 70% probability approximates a 70% empirical churn rate in the calibration set."
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -225,7 +257,8 @@ def simulate_behavior(payload: SimulationRequest):
             "riskReductionPercentage": round(-prob_delta * 100, 1),
             "driverChanges": driver_deltas[:6],
             "simulatedEngagementScore": mod_raw.get("engagementScore"),
-            "disclaimer": "Model simulation only. Not a guaranteed outcome."
+            "disclaimer": "Model simulation only — not a guaranteed outcome. SHAP-based counterfactuals show model sensitivity, not causal effects. Actual customer behavior may differ from model predictions.",
+            "simulationMethodology": "What-if analysis modifies input features and re-evaluates the calibrated XGBoost model. This is a model sensitivity test, not a causal intervention estimate."
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
