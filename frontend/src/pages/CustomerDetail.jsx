@@ -1,3 +1,5 @@
+import { ModelSelector } from "../components/common/ModelSelector";
+import { useModel } from "../context/ModelContext";
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { customerApi } from "../services/api";
@@ -32,6 +34,34 @@ export const CustomerDetail = () => {
   const [aiSummary, setAiSummary] = useState(null);
   const [generatingAi, setGeneratingAi] = useState(false);
   const [error, setError] = useState(null);
+
+  const { selectedModelId, isCombinedMode, combinedModels, activeModel } = useModel();
+  const [livePrediction, setLivePrediction] = useState(null);
+  const [predicting, setPredicting] = useState(false);
+
+  useEffect(() => {
+    if (!id || !data) return;
+    let isMounted = true;
+    const runLivePrediction = async () => {
+      try {
+        setPredicting(true);
+        const payload = {
+          modelId: isCombinedMode ? "combined" : selectedModelId,
+          combinedModels: isCombinedMode ? combinedModels : undefined
+        };
+        const res = await customerApi.predictLive(id, payload);
+        if (isMounted && res.data?.prediction) {
+          setLivePrediction(res.data.prediction);
+        }
+      } catch (err) {
+        console.warn("Live prediction error:", err);
+      } finally {
+        if (isMounted) setPredicting(false);
+      }
+    };
+    runLivePrediction();
+    return () => { isMounted = false; };
+  }, [id, data, selectedModelId, isCombinedMode, combinedModels]);
 
   useEffect(() => {
     if (id) {
@@ -101,24 +131,22 @@ export const CustomerDetail = () => {
     ...customer
   };
 
-  const activePred = prediction || predictions || {};
+  const activePred = livePrediction || prediction || predictions || {};
 
   const riskLevel =
-    customerData?.predictedRiskLevel ||
     activePred.riskLevel ||
+    customerData?.predictedRiskLevel ||
     "LOW";
 
   const churnProb =
-    customerData?.predictedChurnProb !== undefined
-      ? customerData.predictedChurnProb
-      : activePred.churnProbability !== undefined
+    activePred.churnProbability !== undefined
       ? activePred.churnProbability
+      : customerData?.predictedChurnProb !== undefined
+      ? customerData.predictedChurnProb
       : 0.0;
 
   const riskDrivers =
-    apiRiskDrivers.length > 0
-      ? apiRiskDrivers
-      : activePred.topRiskFactors
+    activePred.topRiskFactors
       ? [
           ...(activePred.topRiskFactors || []).map((f) => ({
             featureName: f.label || f.feature,
@@ -129,29 +157,44 @@ export const CustomerDetail = () => {
             impact: f.shapValue || -0.2
           }))
         ]
+      : apiRiskDrivers.length > 0
+      ? apiRiskDrivers
       : [];
 
   const behavioralSignals = activePred.behavioralSignals || [];
   const dataQuality = activePred.dataQuality || { sufficientHistory: true };
-  const modelVersion = activePred.modelVersion || "bankshield-hybrid-v1";
-  const predictionType = activePred.predictionType || "ensemble";
+  const modelVersion = activePred.modelVersion || activeModel.name;
+  const predictionType = activePred.predictionType || (isCombinedMode ? "combined_ensemble" : "standalone");
 
   return (
     <div className="space-y-6">
       {/* Back link & Top Dossier Header */}
-      <div className="flex items-center justify-between">
-        <Link
-          to="/customers"
-          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-white font-mono uppercase"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Customer Directory</span>
-        </Link>
-        <div className="flex items-center gap-2 font-mono text-[11px] text-muted">
-          <span className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 rounded uppercase font-bold">
-            {modelVersion}
-          </span>
-          <span>LAST ACCESSED: {new Date().toLocaleTimeString()}</span>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <Link
+            to="/customers"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-white font-mono uppercase"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Customer Directory</span>
+          </Link>
+          <div className="flex items-center gap-2 font-mono text-[11px] text-muted">
+            <span className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 rounded uppercase font-bold">
+              {modelVersion}
+            </span>
+            <span>LAST ACCESSED: {new Date().toLocaleTimeString()}</span>
+          </div>
+        </div>
+
+        {/* Model Selection Bar */}
+        <div className="relative">
+          <ModelSelector />
+          {predicting && (
+            <div className="absolute right-4 top-3.5 flex items-center gap-2 text-xs font-mono text-primary bg-surface/90 px-2 py-1 rounded border border-primary/30 shadow">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+              <span>Recalculating live inference...</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -384,7 +427,7 @@ export const CustomerDetail = () => {
             )}
           </div>
           <div className="mt-3 pt-2 border-t border-border/50 text-[10px] font-mono text-muted">
-            Attribution computed via TreeExplainer on XGBoost ensemble base. Feature attribution indicates predictive correlation with model output, not causation.
+            Attribution computed for {modelVersion}. Feature attribution indicates predictive correlation with model output, not causation.
           </div>
         </Card>
 

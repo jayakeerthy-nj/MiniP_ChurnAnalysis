@@ -1,3 +1,5 @@
+import { ModelSelector } from "../components/common/ModelSelector";
+import { useModel } from "../context/ModelContext";
 import React, { useState } from "react";
 import { simulatorApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -15,6 +17,7 @@ export const Simulator = () => {
   const [products, setProducts] = useState(3);
   const [balance, setBalance] = useState(250000);
 
+  const { selectedModelId, isCombinedMode, combinedModels, activeModel } = useModel();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -25,6 +28,8 @@ export const Simulator = () => {
       setError(null);
       const res = await simulatorApi.simulate({
         customerId,
+        modelId: isCombinedMode ? "combined" : selectedModelId,
+        combinedModels: isCombinedMode ? combinedModels : undefined,
         modifications: {
           transactionsPerMonth: Number(txPerMonth),
           digitalUsagePercentage: Number(digitalPct),
@@ -53,6 +58,9 @@ export const Simulator = () => {
         title="What-If Churn Simulator"
         subtitle="Explore how changes in customer behavioral inputs affect the model's churn probability output. This is a model sensitivity test — not a causal or uplift prediction."
       />
+
+      {/* Model Selection Control */}
+      <ModelSelector />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Controls Column */}

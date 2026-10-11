@@ -48,7 +48,8 @@ export const authApi = {
 
 export const customerApi = {
   getCustomers: (params) => api.get("/customers", { params }),
-  getCustomer360: (id) => api.get(`/customers/${id}`),
+  getCustomer360: (id, params) => api.get(`/customers/${id}`, { params }),
+  predictLive: (id, payload) => api.post(`/customers/${id}/predict`, payload),
   getAiSummary: (id) => api.get(`/customers/${id}/ai-summary`)
 };
 
@@ -57,7 +58,8 @@ export const analyticsApi = {
   getRisk: () => api.get("/analytics/risk"),
   getChurn: () => api.get("/analytics/churn"),
   getSegments: () => api.get("/analytics/segments"),
-  getExecutiveBrief: () => api.get("/analytics/executive-brief")
+  getExecutiveBrief: () => api.get("/analytics/executive-brief"),
+  getAvailableModels: () => api.get("/analytics/models")
 };
 
 export const recommendationApi = {

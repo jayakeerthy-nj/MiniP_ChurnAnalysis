@@ -127,10 +127,23 @@ export const customerController = {
       DigitalInteraction.find({ customerId: id }).sort({ date: -1 }).limit(40)
     ]);
 
+    const modelId = (req.query.modelId || req.query.model) as string | undefined;
+    let combinedModels: string[] | undefined = undefined;
+    if (req.query.combinedModels) {
+      combinedModels = Array.isArray(req.query.combinedModels)
+        ? (req.query.combinedModels as string[])
+        : String(req.query.combinedModels).split(",").map(s => s.trim()).filter(Boolean);
+    }
+
     // Live or cached ML Prediction
     let prediction = null;
     if (features) {
-      prediction = await mlClientService.predictChurn(features.toObject());
+      try {
+        prediction = await mlClientService.predictChurn(features.toObject(), modelId, combinedModels);
+      } catch (err: any) {
+        console.warn("Prediction error in getCustomer360, falling back to default:", err.message);
+        prediction = await mlClientService.predictChurn(features.toObject());
+      }
     }
 
     // Behavioral timeline (aggregate 6 months of historical activity)
@@ -230,5 +243,36 @@ export const customerController = {
     );
 
     res.json({ success: true, summary });
-  }
+  },
+
+  async predictCustomerLive(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const { modelId, combinedModels } = req.body;
+    const features = await CustomerFeatures.findOne({ customerId: id });
+    if (!features) {
+      res.status(404).json({ success: false, error: "Customer features not found" });
+      return;
+    }
+
+    try {
+      const prediction = await mlClientService.predictChurn(features.toObject(), modelId, combinedModels);
+      const riskDrivers = prediction?.topRiskFactors
+        ? [
+            ...(prediction.topRiskFactors || []).map((f: any) => ({
+              featureName: f.label || f.feature,
+              impact: f.shapValue || 0.25
+            })),
+            ...(prediction.protectiveFactors || []).map((f: any) => ({
+              featureName: f.label || f.feature,
+              impact: f.shapValue || -0.2
+            }))
+          ]
+        : [];
+
+      res.json({ success: true, prediction, riskDrivers });
+    } catch (err: any) {
+      res.status(400).json({ success: false, error: err.message });
+    }
+  },
+
 };

@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ModelProvider } from "./context/ModelContext";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { Loading } from "./components/ui/Loading";
@@ -56,34 +57,36 @@ const ProtectedRoute = ({ allowedRoles }) => {
 export const App = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Landing Page */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
+      <ModelProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Landing Page */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
 
-          {/* Protected Workspace Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/customers/:id" element={<CustomerDetail />} />
-            <Route path="/segments" element={<Segments />} />
-            <Route path="/risk" element={<Risk />} />
-            <Route path="/churn" element={<ChurnAnalytics />} />
-            <Route path="/recommendations" element={<Recommendations />} />
-            <Route path="/simulator" element={<Simulator />} />
-            <Route path="/reports" element={<Reports />} />
-          </Route>
+            {/* Protected Workspace Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/customers" element={<Customers />} />
+              <Route path="/customers/:id" element={<CustomerDetail />} />
+              <Route path="/segments" element={<Segments />} />
+              <Route path="/risk" element={<Risk />} />
+              <Route path="/churn" element={<ChurnAnalytics />} />
+              <Route path="/recommendations" element={<Recommendations />} />
+              <Route path="/simulator" element={<Simulator />} />
+              <Route path="/reports" element={<Reports />} />
+            </Route>
 
-          {/* Admin Protected Route */}
-          <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-            <Route path="/admin" element={<Admin />} />
-          </Route>
+            {/* Admin Protected Route */}
+            <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+              <Route path="/admin" element={<Admin />} />
+            </Route>
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ModelProvider>
     </AuthProvider>
   );
 };

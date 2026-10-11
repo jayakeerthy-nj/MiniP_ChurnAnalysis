@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "cmd. Churn Modeling & Decision Engine: Calibrated Customer Risk & Churn Analytics Platform",
   "scripts": {
-    "dev:ml": "cd ml-service && (test -f venv/bin/python3 && ./venv/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 || python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000)",
+    "dev:ml": "cd ml-service && (test -f venv/bin/python3 && ./venv/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload || python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload)",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ML,BACKEND,FRONTEND\" -c \"yellow.bold,blue.bold,green.bold\" \"npm run dev:ml\" \"npm run dev:backend\" \"npm run dev:frontend\"",

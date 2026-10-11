@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { analyticsService } from "../services/analyticsService.js";
 import { geminiService } from "../services/geminiService.js";
+import { mlClientService } from "../services/mlClientService.js";
 
 export const analyticsController = {
   async getDashboard(req: Request, res: Response): Promise<void> {
@@ -31,5 +32,10 @@ export const analyticsController = {
       churn.correlationMatrix
     );
     res.json({ success: true, brief });
+  },
+
+  async getModels(req: Request, res: Response): Promise<void> {
+    const catalog = await mlClientService.getAvailableModels();
+    res.json({ success: true, ...catalog });
   }
 };

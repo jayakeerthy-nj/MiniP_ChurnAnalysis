@@ -1,6 +1,7 @@
 import React from "react";
 import { Activity, Shield, Bell, RefreshCw } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { ModelSelector } from "../common/ModelSelector";
 
 export const Header = ({ onRefresh, refreshing = false }) => {
   const { user } = useAuth();
@@ -13,9 +14,8 @@ export const Header = ({ onRefresh, refreshing = false }) => {
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-neutral-300 font-medium">SYSTEM OPERATIONAL</span>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-muted text-[11px]">
-          <span>ML ENGINE:</span>
-          <span className="text-emerald-400 font-semibold">XGBOOST V2.4</span>
+        <div className="hidden sm:flex items-center">
+          <ModelSelector variant="compact" />
         </div>
       </div>
 

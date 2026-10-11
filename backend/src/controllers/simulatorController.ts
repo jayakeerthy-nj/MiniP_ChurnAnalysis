@@ -4,7 +4,7 @@ import { CustomerFeatures } from "../models/CustomerFeatures.js";
 
 export const simulatorController = {
   async simulate(req: Request, res: Response): Promise<void> {
-    const { customerId, originalFeatures, modifications } = req.body;
+    const { customerId, originalFeatures, modifications, modelId, combinedModels } = req.body;
 
     let baseFeatures = originalFeatures;
     if (!baseFeatures && customerId) {
@@ -19,7 +19,16 @@ export const simulatorController = {
       return;
     }
 
-    const result = await mlClientService.simulateIntervention(baseFeatures, modifications || {});
-    res.json({ success: true, simulation: result });
+    try {
+      const result = await mlClientService.simulateIntervention(
+        baseFeatures,
+        modifications || {},
+        modelId,
+        combinedModels
+      );
+      res.json({ success: true, simulation: result });
+    } catch (err: any) {
+      res.status(400).json({ success: false, error: err.message });
+    }
   }
 };
