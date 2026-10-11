@@ -386,7 +386,6 @@ export const CustomerDetail = () => {
           <div className="mt-3 pt-2 border-t border-border/50 text-[10px] font-mono text-muted">
             Attribution computed via TreeExplainer on XGBoost ensemble base. Feature attribution indicates predictive correlation with model output, not causation.
           </div>
-          </div>
         </Card>
 
         {/* Complaints and Interaction History */}
