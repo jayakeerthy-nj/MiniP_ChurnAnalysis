@@ -1,0 +1,146 @@
+{
+  "Logistic Regression": {
+    "accuracy": 0.9505,
+    "precision": 0.759,
+    "recall": 0.9299,
+    "f1": 0.8358,
+    "rocAuc": 0.9898,
+    "prAuc": 0.958,
+    "brierScore": 0.0355,
+    "logLoss": 0.1176,
+    "confusionMatrix": [
+      [
+        1649,
+        80
+      ],
+      [
+        19,
+        252
+      ]
+    ],
+    "churnPrevalence": 0.1355,
+    "trainingTimeSec": 0.13,
+    "inferenceLatencyMs": 0.25,
+    "evaluatedOn": "held-out test set"
+  },
+  "Random Forest": {
+    "accuracy": 0.977,
+    "precision": 0.8893,
+    "recall": 0.9483,
+    "f1": 0.9179,
+    "rocAuc": 0.996,
+    "prAuc": 0.9802,
+    "brierScore": 0.0232,
+    "logLoss": 0.0915,
+    "confusionMatrix": [
+      [
+        1697,
+        32
+      ],
+      [
+        14,
+        257
+      ]
+    ],
+    "churnPrevalence": 0.1355,
+    "trainingTimeSec": 0.62,
+    "inferenceLatencyMs": 49.39,
+    "evaluatedOn": "held-out test set"
+  },
+  "XGBoost": {
+    "accuracy": 0.9825,
+    "precision": 0.9275,
+    "recall": 0.9446,
+    "f1": 0.936,
+    "rocAuc": 0.9978,
+    "prAuc": 0.9883,
+    "brierScore": 0.0123,
+    "logLoss": 0.0414,
+    "confusionMatrix": [
+      [
+        1709,
+        20
+      ],
+      [
+        15,
+        256
+      ]
+    ],
+    "churnPrevalence": 0.1355,
+    "trainingTimeSec": 0.0,
+    "inferenceLatencyMs": 7.28,
+    "evaluatedOn": "held-out test set"
+  },
+  "CatBoost": {
+    "accuracy": 0.9815,
+    "precision": 0.9209,
+    "recall": 0.9446,
+    "f1": 0.9326,
+    "rocAuc": 0.9977,
+    "prAuc": 0.9876,
+    "brierScore": 0.0134,
+    "logLoss": 0.0473,
+    "confusionMatrix": [
+      [
+        1707,
+        22
+      ],
+      [
+        15,
+        256
+      ]
+    ],
+    "churnPrevalence": 0.1355,
+    "trainingTimeSec": 0.0,
+    "inferenceLatencyMs": 2.56,
+    "evaluatedOn": "held-out test set"
+  },
+  "LightGBM": {
+    "accuracy": 0.9825,
+    "precision": 0.937,
+    "recall": 0.9336,
+    "f1": 0.9353,
+    "rocAuc": 0.9977,
+    "prAuc": 0.988,
+    "brierScore": 0.0122,
+    "logLoss": 0.0409,
+    "confusionMatrix": [
+      [
+        1712,
+        17
+      ],
+      [
+        18,
+        253
+      ]
+    ],
+    "churnPrevalence": 0.1355,
+    "trainingTimeSec": 0.0,
+    "inferenceLatencyMs": 2.22,
+    "evaluatedOn": "held-out test set"
+  },
+  "BankShield-Hybrid Ensemble": {
+    "accuracy": 0.9845,
+    "precision": 0.9545,
+    "recall": 0.9299,
+    "f1": 0.9421,
+    "rocAuc": 0.998,
+    "prAuc": 0.9889,
+    "brierScore": 0.0121,
+    "logLoss": 0.047,
+    "confusionMatrix": [
+      [
+        1717,
+        12
+      ],
+      [
+        19,
+        252
+      ]
+    ],
+    "churnPrevalence": 0.1355,
+    "trainingTimeSec": 0.0,
+    "inferenceLatencyMs": 0.0,
+    "evaluatedOn": "held-out test set"
+  }
+}

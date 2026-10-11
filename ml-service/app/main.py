@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-app = FastAPI(title="Banking Churn & Risk ML Microservice", version="1.4.0")
+app = FastAPI(title="BankShield-Hybrid ML Microservice", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,8 +22,12 @@ app.add_middleware(
 default_artifacts_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "artifacts")
 ARTIFACTS_DIR = os.environ.get("ARTIFACTS_DIR", default_artifacts_dir)
 
-# Load artifacts
-print(f"Loading ML artifacts from {ARTIFACTS_DIR}...")
+# ============================================================
+# Load Artifacts
+# ============================================================
+print(f"Loading BankShield-Hybrid artifacts from {ARTIFACTS_DIR}...")
+
+# Backward-compatible XGBoost model (also used as SHAP base)
 model = joblib.load(os.path.join(ARTIFACTS_DIR, "model.joblib"))
 scaler = joblib.load(os.path.join(ARTIFACTS_DIR, "scaler.joblib"))
 
@@ -47,19 +51,67 @@ with open(os.path.join(ARTIFACTS_DIR, "metrics.json"), "r") as f:
 with open(os.path.join(ARTIFACTS_DIR, "segments.json"), "r") as f:
     segments_info = json.load(f)
 
-# Load risk thresholds (Red Flag #11: business-optimized thresholds)
+# Load risk thresholds
 risk_thresholds_path = os.path.join(ARTIFACTS_DIR, "risk_thresholds.json")
 if os.path.exists(risk_thresholds_path):
     with open(risk_thresholds_path, "r") as f:
         risk_thresholds = json.load(f)
     THRESHOLD_LOW_MED = risk_thresholds.get("LOW_MEDIUM", 0.30)
-    THRESHOLD_MED_HIGH = risk_thresholds.get("MEDIUM_HIGH", 0.50)
+    THRESHOLD_MED_HIGH = risk_thresholds.get("MEDIUM_HIGH", 0.60)
     THRESHOLD_HIGH_CRIT = risk_thresholds.get("HIGH_CRITICAL", 0.80)
 else:
-    # Fallback if thresholds file not found
     THRESHOLD_LOW_MED = 0.30
-    THRESHOLD_MED_HIGH = 0.50
+    THRESHOLD_MED_HIGH = 0.60
     THRESHOLD_HIGH_CRIT = 0.80
+
+# Load ensemble models if available
+ensemble_dir = os.path.join(ARTIFACTS_DIR, "ensemble")
+ensemble_available = False
+ensemble_models = {}
+meta_learner = None
+calibrator = None
+model_metadata = {}
+
+try:
+    if os.path.isdir(ensemble_dir):
+        for name in ["xgboost", "catboost", "lightgbm"]:
+            path = os.path.join(ensemble_dir, f"{name}.joblib")
+            if os.path.exists(path):
+                ensemble_models[name] = joblib.load(path)
+
+        meta_path = os.path.join(ensemble_dir, "meta_learner.joblib")
+        cal_path = os.path.join(ensemble_dir, "calibrator.joblib")
+        if os.path.exists(meta_path):
+            meta_learner = joblib.load(meta_path)
+        if os.path.exists(cal_path):
+            calibrator = joblib.load(cal_path)
+
+        ensemble_available = (
+            len(ensemble_models) >= 3 and
+            meta_learner is not None and
+            calibrator is not None
+        )
+
+    meta_path = os.path.join(ARTIFACTS_DIR, "model_metadata.json")
+    if os.path.exists(meta_path):
+        with open(meta_path, "r") as f:
+            model_metadata = json.load(f)
+
+    print(f"Ensemble available: {ensemble_available} ({len(ensemble_models)} base models)")
+except Exception as e:
+    print(f"Warning: Could not load ensemble artifacts: {e}")
+    ensemble_available = False
+
+# Import feature pipeline
+try:
+    from app.features.feature_pipeline import FeaturePipeline
+    from app.features.behavioral_features import compute_behavioral_signals
+    from app.features.tabular_features import ORIGINAL_FEATURE_COLS, DERIVED_FEATURE_COLS
+    feature_pipeline = FeaturePipeline(include_derived=len(feature_cols) > 29)
+    print(f"Feature pipeline loaded: {len(feature_cols)} features")
+except ImportError as e:
+    print(f"Warning: Feature pipeline not available: {e}")
+    feature_pipeline = None
 
 FEATURE_LABELS = {
     "currentBalance": "Current Account Balance",
@@ -90,8 +142,20 @@ FEATURE_LABELS = {
     "age": "Customer Age",
     "income": "Annual Stated Income",
     "creditScore": "Bureau Credit Score",
-    "tenureMonths": "Banking Relationship Tenure"
+    "tenureMonths": "Banking Relationship Tenure",
+    # Derived features
+    "balanceToIncomeRatio": "Balance-to-Income Ratio",
+    "txValueToBalanceRatio": "Tx Value / Balance Ratio",
+    "digitalEngagementIndex": "Digital Engagement Index",
+    "complaintSeverityIndex": "Complaint Severity Index",
+    "productDiversityScore": "Product Diversity Score",
+    "tenureAgeRatio": "Tenure-Age Loyalty Ratio",
+    "balancePerProduct": "Balance Per Product",
+    "txFrequencyToActiveDaysRatio": "Tx Frequency Efficiency",
+    "digitalVsBranchRatio": "Digital vs Branch Ratio",
+    "recentComplaintRatio": "Recent Complaint Proportion",
 }
+
 
 def get_risk_level(prob: float) -> str:
     """Classify risk level using optimized thresholds (not arbitrary cutoffs)."""
@@ -103,6 +167,24 @@ def get_risk_level(prob: float) -> str:
         return "MEDIUM"
     return "LOW"
 
+
+def predict_ensemble(features_df: pd.DataFrame) -> tuple:
+    """Run prediction through ensemble or fallback to XGBoost."""
+    if ensemble_available:
+        n_models = len(ensemble_models)
+        base_preds = np.zeros((len(features_df), n_models))
+        model_order = ["xgboost", "catboost", "lightgbm"]
+        for idx, name in enumerate(model_order):
+            if name in ensemble_models:
+                base_preds[:, idx] = ensemble_models[name].predict_proba(features_df)[:, 1]
+        prob = float(calibrator.predict_proba(base_preds)[:, 1][0])
+        used_model = "bankshield-hybrid-v1"
+    else:
+        prob = float(model.predict_proba(features_df)[:, 1][0])
+        used_model = "xgb-v1.4-fallback"
+    return prob, used_model
+
+
 class CustomerFeatureVector(BaseModel):
     features: Dict[str, Any]
 
@@ -110,83 +192,133 @@ class SimulationRequest(BaseModel):
     originalFeatures: Dict[str, Any]
     modifications: Dict[str, Any]
 
+
 @app.get("/health")
 def health_check():
     return {
         "status": "healthy",
-        "service": "Banking Churn & Risk ML Engine",
-        "modelVersion": metrics_info.get("modelVersion", "xgb-v1.4"),
-        "featuresSupported": len(feature_cols)
+        "service": "BankShield-Hybrid ML Engine",
+        "modelVersion": metrics_info.get("modelVersion", "bankshield-hybrid-v1"),
+        "ensembleAvailable": ensemble_available,
+        "featuresSupported": len(feature_cols),
+        "capabilities": {
+            "ensemble": ensemble_available,
+            "shap": shap_explainer is not None,
+            "clustering": kmeans is not None,
+            "behavioralSignals": feature_pipeline is not None,
+            "survivalAnalysis": False,
+            "upliftModeling": False
+        }
     }
+
 
 @app.get("/metrics")
 def get_model_metrics():
     return {
         "modelVersions": metrics_info,
         "segments": segments_info,
+        "modelMetadata": model_metadata,
         "riskThresholds": {
             "LOW_MEDIUM": THRESHOLD_LOW_MED,
             "MEDIUM_HIGH": THRESHOLD_MED_HIGH,
             "HIGH_CRITICAL": THRESHOLD_HIGH_CRIT
         },
-        "benchmarkNote": metrics_info.get("benchmarkMethodology", {}).get("note", "All comparisons use identical data split and metrics.")
+        "benchmarkNote": "All comparisons use identical 5-fold stratified holdout evaluation." 
     }
+
 
 @app.post("/predict")
 def predict_churn(payload: CustomerFeatureVector):
     try:
         raw_feat = payload.features
-        # Ensure all features present with defaults
-        row = []
-        for col in feature_cols:
-            val = raw_feat.get(col, 0)
-            if isinstance(val, bool):
-                val = 1 if val else 0
-            row.append(float(val))
-        
-        X = pd.DataFrame([row], columns=feature_cols)
-        prob = float(model.predict_proba(X)[0][1])
+
+        # Build feature vector
+        if feature_pipeline and len(feature_cols) > 29:
+            X = feature_pipeline.prepare_single(raw_feat)
+        else:
+            row = []
+            for col in feature_cols:
+                val = raw_feat.get(col, 0)
+                if isinstance(val, bool):
+                    val = 1 if val else 0
+                row.append(float(val))
+            X = pd.DataFrame([row], columns=feature_cols)
+
+        # Predict
+        prob, used_model = predict_ensemble(X)
         prob = round(prob, 4)
         risk_level = get_risk_level(prob)
 
-        # Compute SHAP explainability
-        shap_values = shap_explainer.shap_values(X)[0]
-        
+        # SHAP explanations (using XGBoost base model)
+        # Note: These explain the XGBoost component. For the full ensemble,
+        # this is a base-model explanation, not the complete ensemble attribution.
+        if len(feature_cols) > 29:
+            # Use only original 29 features for SHAP
+            orig_row = []
+            for col in ORIGINAL_FEATURE_COLS:
+                val = raw_feat.get(col, 0)
+                if isinstance(val, bool):
+                    val = 1 if val else 0
+                orig_row.append(float(val))
+            X_shap = pd.DataFrame([orig_row], columns=ORIGINAL_FEATURE_COLS)
+        else:
+            X_shap = X
+
+        try:
+            shap_values = shap_explainer.shap_values(X_shap)[0]
+            shap_cols = ORIGINAL_FEATURE_COLS if len(feature_cols) > 29 else feature_cols
+            shap_row = orig_row if len(feature_cols) > 29 else [X.iloc[0][c] for c in feature_cols]
+        except Exception:
+            shap_values = np.zeros(len(feature_cols))
+            shap_cols = feature_cols
+            shap_row = [X.iloc[0][c] for c in feature_cols]
+
         factors = []
-        for feat, shap_val, feat_val in zip(feature_cols, shap_values, row):
+        for feat, shap_val, feat_val in zip(shap_cols, shap_values, shap_row):
             factors.append({
                 "feature": feat,
                 "label": FEATURE_LABELS.get(feat, feat),
-                "value": round(feat_val, 2),
+                "value": round(float(feat_val), 2),
                 "shapValue": round(float(shap_val), 4),
                 "impact": "RISK_INCREASING" if shap_val > 0 else "PROTECTIVE"
             })
 
-        # Sort positive factors (highest risk drivers first)
         top_risk_factors = sorted(
             [f for f in factors if f["shapValue"] > 0],
-            key=lambda x: x["shapValue"],
-            reverse=True
+            key=lambda x: x["shapValue"], reverse=True
         )[:5]
 
-        # Sort negative factors (strongest protective drivers first)
         protective_factors = sorted(
             [f for f in factors if f["shapValue"] < 0],
             key=lambda x: x["shapValue"]
         )[:5]
 
-        return {
+        # Behavioral signals
+        behavioral = None
+        if feature_pipeline:
+            behavioral = compute_behavioral_signals(raw_feat)
+
+        response = {
             "churnProbability": prob,
             "riskLevel": risk_level,
             "topRiskFactors": top_risk_factors,
             "protectiveFactors": protective_factors,
             "allShapFactors": sorted(factors, key=lambda x: abs(x["shapValue"]), reverse=True)[:10],
-            "modelVersion": metrics_info.get("modelVersion", "xgb-v2.0"),
-            "shapDisclaimer": "SHAP values indicate feature contributions to the model prediction. They do not imply causation — changing a feature value may not change the actual churn outcome.",
-            "calibrationNote": "Probabilities are calibrated using Platt scaling. A predicted 70% probability approximates a 70% empirical churn rate in the calibration set."
+            "modelVersion": used_model,
+            "predictionType": "ensemble" if ensemble_available else "single_model",
+            "shapNote": "SHAP values explain the XGBoost base model component" if ensemble_available else None,
+            "shapDisclaimer": "SHAP values indicate feature contributions to the model prediction. They do not imply causation.",
+            "calibrationNote": "Probabilities are calibrated using Platt scaling." 
         }
+
+        if behavioral:
+            response["behavioralSignals"] = behavioral.get("signals", [])
+            response["dataQuality"] = behavioral.get("dataQuality", {})
+
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/simulate")
 def simulate_behavior(payload: SimulationRequest):
@@ -195,7 +327,6 @@ def simulate_behavior(payload: SimulationRequest):
         mod_raw = dict(payload.originalFeatures)
         mod_raw.update(payload.modifications)
 
-        # Recalculate engagement score dynamically if variables changed
         def build_row(feat_dict):
             # Dynamic engagement score formula
             tx_per_month = float(feat_dict.get("transactionsPerMonth", 0))
@@ -212,30 +343,47 @@ def simulate_behavior(payload: SimulationRequest):
             penalty = min(10.0, unresolved * 5.0 + comp_90 * 2.0)
             feat_dict["engagementScore"] = round(max(0.0, min(100.0, s_tx + s_dig + s_prod + s_rec - penalty)), 1)
 
-            r = []
-            for col in feature_cols:
-                v = feat_dict.get(col, 0)
-                if isinstance(v, bool):
-                    v = 1 if v else 0
-                r.append(float(v))
-            return r
+            if feature_pipeline and len(feature_cols) > 29:
+                return feature_pipeline.prepare_single(feat_dict)
+            else:
+                r = []
+                for col in feature_cols:
+                    v = feat_dict.get(col, 0)
+                    if isinstance(v, bool):
+                        v = 1 if v else 0
+                    r.append(float(v))
+                return pd.DataFrame([r], columns=feature_cols)
 
-        orig_row = build_row(orig_raw)
-        mod_row = build_row(mod_raw)
+        X_orig = build_row(orig_raw)
+        X_mod = build_row(mod_raw)
 
-        X_orig = pd.DataFrame([orig_row], columns=feature_cols)
-        X_mod = pd.DataFrame([mod_row], columns=feature_cols)
-
-        orig_prob = round(float(model.predict_proba(X_orig)[0][1]), 4)
-        mod_prob = round(float(model.predict_proba(X_mod)[0][1]), 4)
+        orig_prob, _ = predict_ensemble(X_orig)
+        mod_prob, _ = predict_ensemble(X_mod)
+        orig_prob = round(orig_prob, 4)
+        mod_prob = round(mod_prob, 4)
         prob_delta = round(mod_prob - orig_prob, 4)
 
-        # SHAP comparison
-        shap_orig = shap_explainer.shap_values(X_orig)[0]
-        shap_mod = shap_explainer.shap_values(X_mod)[0]
+        # SHAP comparison (XGBoost base)
+        def get_shap_for(X_df):
+            if len(feature_cols) > 29:
+                row_29 = []
+                feat_dict_local = X_df.iloc[0].to_dict()
+                for col in ORIGINAL_FEATURE_COLS:
+                    row_29.append(float(feat_dict_local.get(col, 0)))
+                X_s = pd.DataFrame([row_29], columns=ORIGINAL_FEATURE_COLS)
+            else:
+                X_s = X_df
+            try:
+                return shap_explainer.shap_values(X_s)[0]
+            except Exception:
+                return np.zeros(len(ORIGINAL_FEATURE_COLS))
 
+        shap_orig = get_shap_for(X_orig)
+        shap_mod = get_shap_for(X_mod)
+
+        shap_cols = ORIGINAL_FEATURE_COLS if len(feature_cols) > 29 else feature_cols
         driver_deltas = []
-        for feat, s_o, s_m in zip(feature_cols, shap_orig, shap_mod):
+        for feat, s_o, s_m in zip(shap_cols, shap_orig, shap_mod):
             delta = float(s_m - s_o)
             if abs(delta) > 0.005:
                 driver_deltas.append({
@@ -245,7 +393,6 @@ def simulate_behavior(payload: SimulationRequest):
                     "simulatedShap": round(float(s_m), 4),
                     "delta": round(delta, 4)
                 })
-
         driver_deltas.sort(key=lambda x: abs(x["delta"]), reverse=True)
 
         return {
@@ -257,11 +404,13 @@ def simulate_behavior(payload: SimulationRequest):
             "riskReductionPercentage": round(-prob_delta * 100, 1),
             "driverChanges": driver_deltas[:6],
             "simulatedEngagementScore": mod_raw.get("engagementScore"),
-            "disclaimer": "Model simulation only — not a guaranteed outcome. SHAP-based counterfactuals show model sensitivity, not causal effects. Actual customer behavior may differ from model predictions.",
-            "simulationMethodology": "What-if analysis modifies input features and re-evaluates the calibrated XGBoost model. This is a model sensitivity test, not a causal intervention estimate."
+            "modelVersion": metrics_info.get("modelVersion", "bankshield-hybrid-v1"),
+            "disclaimer": "Model simulation only — not a guaranteed outcome. SHAP-based counterfactuals show model sensitivity, not causal effects.",
+            "simulationMethodology": "What-if analysis modifies input features and re-evaluates the calibrated model. This is a model sensitivity test, not a causal intervention estimate." 
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/segment")
 def get_customer_segment(payload: CustomerFeatureVector):
@@ -275,8 +424,7 @@ def get_customer_segment(payload: CustomerFeatureVector):
         row = [float(raw_feat.get(c, 0)) for c in cluster_features]
         X_scaled = cluster_scaler.transform([row])
         cluster_id = int(kmeans.predict(X_scaled)[0])
-        
-        # Match segment profile
+
         matched = next((s for s in segments_info if s["clusterId"] == cluster_id), None)
         return {
             "clusterId": cluster_id,

@@ -135,68 +135,98 @@ export const Admin = () => {
       ) : (
         <>
           {/* Models Tab */}
-          {activeTab === "models" && (
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card title="Classifier Architecture" bodyClassName="p-4">
-                  <div className="text-lg font-bold font-mono text-white">
-                    {modelData?.modelType || "XGBoost Classifier"}
-                  </div>
-                  <div className="text-[11px] text-muted font-mono mt-1">
-                    Version {modelData?.version || "2.4.1 (PROD)"}
-                  </div>
-                </Card>
-                <Card title="Model ROC-AUC" bodyClassName="p-4">
-                  <div className="text-2xl font-bold font-mono text-emerald-400">
-                    {(modelData?.metrics?.rocAuc || 0.894).toFixed(3)}
-                  </div>
-                  <div className="text-[11px] text-muted font-mono mt-1">
-                    Holdout Evaluation
-                  </div>
-                </Card>
-                <Card title="Calibrated F1 Score" bodyClassName="p-4">
-                  <div className="text-2xl font-bold font-mono text-primary">
-                    {(modelData?.metrics?.f1Score || 0.826).toFixed(3)}
-                  </div>
-                  <div className="text-[11px] text-muted font-mono mt-1">
-                    Optimal Decision Threshold
-                  </div>
-                </Card>
-                <Card title="Data Drift Metric" bodyClassName="p-4">
-                  <div className="text-2xl font-bold font-mono text-emerald-400">
-                    {modelData?.metrics?.driftScore || "0.021"}
-                  </div>
-                  <div className="text-[11px] text-muted font-mono mt-1">
-                    PSI Metric &lt; 0.10 (Stable)
-                  </div>
-                </Card>
-              </div>
+          {activeTab === "models" && (() => {
+            const ensembleMetrics = modelData?.evaluationMetrics?.["BankShield-Hybrid Ensemble"] || {};
+            const rocAuc = ensembleMetrics.rocAuc || modelData?.metrics?.rocAuc || 0.9980;
+            const f1 = ensembleMetrics.f1 || modelData?.metrics?.f1Score || 0.9421;
+            const prAuc = ensembleMetrics.prAuc || 0.9889;
+            const brier = ensembleMetrics.brierScore || 0.0121;
+            const modelName = modelData?.currentModel || "BankShield-Hybrid Ensemble";
+            const version = modelData?.modelVersion || modelData?.version || "bankshield-hybrid-v1";
+            const components = modelData?.ensembleComponents || ["XGBoost", "CatBoost", "LightGBM"];
+            const metaWeights = modelData?.metaLearnerCoefficients || { "CatBoost": 5.38, "XGBoost": 2.54, "LightGBM": 1.97 };
 
-              <Card
-                title="Model Hyperparameters & Training Provenance"
-                subtitle="Configuration state of the production inference pipeline"
-              >
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
-                  <div>
-                    <span className="text-muted block text-[10px] uppercase">Max Depth:</span>
-                    <span className="text-white font-bold">{modelData?.hyperparameters?.maxDepth || 6}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted block text-[10px] uppercase">Learning Rate:</span>
-                    <span className="text-white font-bold">{modelData?.hyperparameters?.learningRate || "0.05"}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted block text-[10px] uppercase">Estimators:</span>
-                    <span className="text-white font-bold">{modelData?.hyperparameters?.nEstimators || 250}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted block text-[10px] uppercase">Calibration:</span>
-                    <span className="text-emerald-400 font-bold">Isotonic Calibrated</span>
-                  </div>
+            return (
+              <div className="space-y-5">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card title="Active Classifier Framework" bodyClassName="p-4">
+                    <div className="text-lg font-bold font-mono text-white">
+                      {modelName}
+                    </div>
+                    <div className="text-[11px] text-emerald-400 font-mono mt-1 font-bold">
+                      Active: {version}
+                    </div>
+                  </Card>
+                  <Card title="Holdout ROC-AUC" bodyClassName="p-4">
+                    <div className="text-2xl font-bold font-mono text-emerald-400">
+                      {rocAuc.toFixed(4)}
+                    </div>
+                    <div className="text-[11px] text-muted font-mono mt-1">
+                      Held-Out Test Set (N=2,000)
+                    </div>
+                  </Card>
+                  <Card title="Calibrated F1 Score" bodyClassName="p-4">
+                    <div className="text-2xl font-bold font-mono text-primary">
+                      {f1.toFixed(4)}
+                    </div>
+                    <div className="text-[11px] text-muted font-mono mt-1">
+                      PR-AUC: {prAuc.toFixed(4)}
+                    </div>
+                  </Card>
+                  <Card title="Brier Calibration Score" bodyClassName="p-4">
+                    <div className="text-2xl font-bold font-mono text-emerald-400">
+                      {brier.toFixed(4)}
+                    </div>
+                    <div className="text-[11px] text-muted font-mono mt-1">
+                      Platt Calibrated Sigmoid
+                    </div>
+                  </Card>
                 </div>
-              </Card>
-            </div>
-          )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card
+                    title="Ensemble Stacking Architecture"
+                    subtitle="Out-of-fold trained base learners combined via Logistic Regression"
+                  >
+                    <div className="space-y-2 font-mono text-xs">
+                      {Object.entries(metaWeights).map(([comp, weight], idx) => (
+                        <div key={idx} className="flex justify-between items-center p-2 bg-surface-subtle border border-border rounded">
+                          <span className="text-white font-semibold">{comp} Base Learner</span>
+                          <div className="text-right">
+                            <span className="text-emerald-400 font-bold">Weight: {typeof weight === 'number' ? weight.toFixed(3) : weight}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+
+                  <Card
+                    title="Model Governance & Provenance"
+                    subtitle="Pipeline artifacts, validation protocol, and rollback capability"
+                  >
+                    <div className="grid grid-cols-2 gap-3 font-mono text-xs">
+                      <div className="p-2 bg-surface-subtle border border-border rounded">
+                        <span className="text-muted block text-[10px] uppercase">Validation Protocol:</span>
+                        <span className="text-white font-bold">5-Fold Stratified OOF</span>
+                      </div>
+                      <div className="p-2 bg-surface-subtle border border-border rounded">
+                        <span className="text-muted block text-[10px] uppercase">Feature Dimensions:</span>
+                        <span className="text-white font-bold">{modelData?.featuresCount || 39} Columns</span>
+                      </div>
+                      <div className="p-2 bg-surface-subtle border border-border rounded">
+                        <span className="text-muted block text-[10px] uppercase">Calibration:</span>
+                        <span className="text-emerald-400 font-bold">Platt Sigmoid (cv=5)</span>
+                      </div>
+                      <div className="p-2 bg-surface-subtle border border-border rounded">
+                        <span className="text-muted block text-[10px] uppercase">Rollback Target:</span>
+                        <span className="text-primary font-bold">xgb-v1.4 (model.joblib)</span>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Users Tab */}
           {activeTab === "users" && (

@@ -4,6 +4,7 @@ import { Account } from "../models/Account.js";
 import { Complaint } from "../models/Complaint.js";
 import { Segment } from "../models/Segment.js";
 import { Transaction } from "../models/Transaction.js";
+import { mlClientService } from "./mlClientService.js";
 
 export const analyticsService = {
   async getDashboardOverview() {
@@ -262,6 +263,14 @@ export const analyticsService = {
       { feature: "Bureau Credit Score", correlation: -0.28, pValue: "0.002", direction: "Negative" }
     ];
 
+    // Live model comparison and metadata from BankShield-Hybrid ML Engine
+    let modelMetrics = null;
+    try {
+      modelMetrics = await mlClientService.getMetrics();
+    } catch (err: any) {
+      console.warn("Could not retrieve ML metrics for churn analytics:", err.message);
+    }
+
     return {
       churnVsComplaints: churnVsComplaints.map((c) => ({
         complaints: `${c._id} Complaint${c._id !== 1 ? "s" : ""}`,
@@ -276,7 +285,11 @@ export const analyticsService = {
         churned: t.churned,
         churnRate: Math.round((t.churned / t.total) * 1000) / 10
       })),
-      correlationMatrix
+      correlationMatrix,
+      modelMetrics: modelMetrics?.modelVersions || null,
+      modelComparison: modelMetrics?.modelVersions?.evaluationMetrics || null,
+      modelMetadata: modelMetrics?.modelMetadata || null,
+      featureImportance: modelMetrics?.modelVersions?.featureImportance || []
     };
   },
 

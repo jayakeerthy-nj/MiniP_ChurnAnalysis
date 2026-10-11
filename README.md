@@ -12,11 +12,38 @@ This platform uses calibrated machine learning models to predict churn probabili
 
 ---
 
+
+---
+
+## 1.1 BankShield-Hybrid Framework
+
+The predictive core of this platform runs **BankShield-Hybrid**: a multi-model stacking ensemble framework designed specifically for banking churn prediction:
+
+- **Base Learners**: Complementary gradient-boosted decision trees (**XGBoost**, **CatBoost**, and **LightGBM**).
+- **Meta-Learner**: Out-of-fold trained **Logistic Regression** meta-classifier combining base probability vectors.
+- **Probability Calibration**: **Platt Scaling** (cross-validated Sigmoid) to ensure predicted probabilities match empirical churn rates across all 4 risk tiers (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
+- **Feature Space**: 39 features (29 core banking features preserved for backward compatibility + 10 interaction & velocity indices).
+- **Explainability**: Customer-level **SHAP TreeExplainer** attribution identifying top risk-increasing and protective factors.
+- **Graceful Fallback**: Automatic failover to standalone XGBoost (`model.joblib`) or internal backend heuristic if the ensemble or microservice is temporarily offline.
+
+### Benchmark Summary (Held-Out Test Set, N=2,000)
+
+| Model | Accuracy | Precision | Recall | F1-Score | ROC-AUC | PR-AUC | Brier Score |
+|---|---|---|---|---|---|---|---|
+| **Logistic Regression** | 95.05% | 75.90% | 92.99% | 0.8358 | 0.9898 | 0.9580 | 0.0355 |
+| **Random Forest** | 97.70% | 88.93% | 94.83% | 0.9179 | 0.9960 | 0.9802 | 0.0232 |
+| **XGBoost (Baseline)** | 98.25% | 92.75% | 94.46% | 0.9360 | 0.9978 | 0.9883 | 0.0123 |
+| **CatBoost** | 98.15% | 92.09% | 94.46% | 0.9326 | 0.9977 | 0.9876 | 0.0134 |
+| **LightGBM** | 98.25% | 93.70% | 93.36% | 0.9353 | 0.9977 | 0.9880 | 0.0122 |
+| **BankShield-Hybrid (Ensemble)** | **98.45%** | **95.45%** | **92.99%** | **0.9421** | **0.9980** | **0.9889** | **0.0121** |
+
+*Detailed reports: [Model Audit](ml-service/docs/MODEL_AUDIT.md) | [Model Evaluation](ml-service/docs/MODEL_EVALUATION.md) | [Architecture](ml-service/docs/BANKSHIELD_ARCHITECTURE.md)*
+
 ## 2. Tech Stack
 
 - **Frontend**: **React.js (v18)** + **JavaScript (JSX)** + **Vite** + **Tailwind CSS** + **Recharts** + **Lucide React** (Port `5173`)
 - **Backend**: **Node.js** + **Express** + **TypeScript** + **Mongoose** (Port `5000`)
-- **ML Service**: **Python** + **FastAPI** + **XGBoost** + **Scikit-Learn** + **SHAP** (Port `8000`)
+- **ML Service (BankShield-Hybrid)**: **Python** + **FastAPI** + **XGBoost** + **CatBoost** + **LightGBM** + **Scikit-Learn** + **SHAP** (Port `8000`)
 - **Database**: **MongoDB** (Local or MongoDB Atlas)
 - **AI Synthesis**: **Google Gemini API** (invoked exclusively via backend server)
 
@@ -45,7 +72,10 @@ This platform uses calibrated machine learning models to predict churn probabili
                                    v
                        +-----------------------+
                        |   PYTHON ML SERVICE   |
-                       |  FastAPI + XGBoost    |  Port 8000
+                       |  BankShield-Hybrid    |  Port 8000
+                       |  Stacking Ensemble    |
+                       |  XGB + CatBoost + LGB |
+                       |  Platt Calibrated     |
                        |  SHAP + K-Means       |
                        +-----------------------+
 ```
