@@ -1,6 +1,6 @@
 {
-  "LOW_MEDIUM": 0.3517,
-  "MEDIUM_HIGH": 0.5861,
-  "HIGH_CRITICAL": 0.8,
-  "methodology": "Thresholds derived from F1-optimal classification boundary and probability distribution percentiles. Should be adjusted based on business retention capacity and intervention cost."
+  "LOW_MEDIUM": 0.30,
+  "MEDIUM_HIGH": 0.60,
+  "HIGH_CRITICAL": 0.80,
+  "methodology": "Documented BankShield-Hybrid risk tier thresholds: CRITICAL >= 0.80, HIGH >= 0.60, MEDIUM >= 0.30, LOW < 0.30."
 }
