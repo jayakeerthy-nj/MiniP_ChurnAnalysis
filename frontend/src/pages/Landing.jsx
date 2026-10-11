@@ -315,7 +315,7 @@ export const Landing = () => {
               </div>
               <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">
                 <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Vulnerable Capital</div>
-                <div className="text-2xl font-normal font-grotesk text-red-400 mt-1">$320M</div>
+                <div className="text-2xl font-normal font-grotesk text-red-400 mt-1">₹320 Cr</div>
                 <div className="text-[10px] text-neutral-500 mt-0.5">High-Risk Exposure</div>
               </div>
               <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-lg">

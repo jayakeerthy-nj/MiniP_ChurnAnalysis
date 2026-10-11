@@ -17,7 +17,7 @@ You are a senior banking customer intelligence AI analyst.
 Analyze the following verified banking data for customer ${customer.name} (ID: ${customer.customerId}):
 - Age: ${customer.age}, City: ${customer.city}, Occupation: ${customer.occupation}
 - Relationship Tenure: ${customer.tenureMonths} months, Credit Score: ${customer.creditScore}
-- Current Balance: INR ${features.currentBalance.toLocaleString()}, Products: ${features.numberOfProducts}
+- Current Balance: ₹${features.currentBalance.toLocaleString('en-IN')}, Products: ${features.numberOfProducts}
 - Monthly Transactions: ${features.transactionsPerMonth}, Digital Adoption: ${features.digitalUsagePercentage}%
 - Grievances: ${features.complaintCount} total (${features.unresolvedComplaints} unresolved)
 - Predicted Churn Risk: ${(prediction.churnProbability * 100).toFixed(1)}% (${prediction.riskLevel} RISK)
@@ -60,7 +60,7 @@ Based on the following portfolio statistics:
 - Baseline Churn Rate: ${kpis.churnRate}%
 - High & Critical Risk Population: ${kpis.highRiskCount + kpis.criticalRiskCount} customers
 - Average Engagement Score: ${kpis.avgEngagementScore}/100
-- Total Monitored Portfolio Balance: INR ${(kpis.totalBalance / 10000000).toFixed(2)} Crores
+- Total Monitored Portfolio Balance: ₹${(kpis.totalBalance / 10000000).toFixed(2)} Crores
 - Top SHAP Churn Drivers: ${topDrivers.map((d: any) => d.feature).slice(0, 4).join(", ")}
 
 Provide a concise 3-bullet point Executive Risk Briefing for senior management outlining key vulnerabilities and portfolio intervention priorities.

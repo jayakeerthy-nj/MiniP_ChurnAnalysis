@@ -1,19 +1,20 @@
 /**
  * Formatting utilities for Banking Risk & Churn Analytics
+ * Formats all transactions, account balances, and exposures in Indian Rupees (INR, ₹).
  */
 
-export function formatCurrency(amount) {
-  if (amount === undefined || amount === null || isNaN(amount)) return "$0";
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(amount, maximumFractionDigits = 0) {
+  if (amount === undefined || amount === null || isNaN(amount)) return "₹0";
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0
+    currency: "INR",
+    maximumFractionDigits
   }).format(amount);
 }
 
 export function formatNumber(num) {
   if (num === undefined || num === null || isNaN(num)) return "0";
-  return new Intl.NumberFormat("en-US").format(num);
+  return new Intl.NumberFormat("en-IN").format(num);
 }
 
 export function formatPercent(value, decimals = 1) {
@@ -25,7 +26,7 @@ export function formatDate(dateStr) {
   if (!dateStr) return "-";
   try {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", {
+    return d.toLocaleDateString("en-IN", {
       year: "numeric",
       month: "short",
       day: "numeric"
