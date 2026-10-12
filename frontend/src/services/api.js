@@ -23,17 +23,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor for 401 handling
+// Interceptor for 401 handling - redirect only if on protected route (never reload on / or /login)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (
-      error.response?.status === 401 &&
-      typeof window !== "undefined" &&
-      !window.location.pathname.includes("/login")
-    ) {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
       localStorage.removeItem("aegis_access_token");
-      window.location.href = "/login";
+      const currentPath = window.location.pathname;
+      if (currentPath !== "/" && !currentPath.startsWith("/login")) {
+        window.location.href = "/";
+      }
     }
     return Promise.reject(error);
   }
@@ -54,11 +53,11 @@ export const customerApi = {
 };
 
 export const analyticsApi = {
-  getDashboard: () => api.get("/analytics/dashboard"),
-  getRisk: () => api.get("/analytics/risk"),
-  getChurn: () => api.get("/analytics/churn"),
+  getDashboard: (params) => api.get("/analytics/dashboard", { params }),
+  getRisk: (params) => api.get("/analytics/risk", { params }),
+  getChurn: (params) => api.get("/analytics/churn", { params }),
   getSegments: () => api.get("/analytics/segments"),
-  getExecutiveBrief: () => api.get("/analytics/executive-brief"),
+  getExecutiveBrief: (params) => api.get("/analytics/executive-brief", { params }),
   getAvailableModels: () => api.get("/analytics/models")
 };
 

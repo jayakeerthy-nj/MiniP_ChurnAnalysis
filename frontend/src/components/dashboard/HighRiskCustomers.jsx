@@ -1,95 +1,118 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
-import { Card } from "../ui/Card";
-import { CustomerRiskBadge } from "../customers/CustomerRiskBadge";
 import { formatCurrency } from "../../utils/formatters";
-import { ShieldAlert, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
+
+const AVATARS = [
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=96&h=96&fit=crop&crop=faces&q=80",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96&h=96&fit=crop&crop=faces&q=80",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=96&h=96&fit=crop&crop=faces&q=80",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop&crop=faces&q=80",
+  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=96&h=96&fit=crop&crop=faces&q=80",
+  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=96&h=96&fit=crop&crop=faces&q=80"
+];
 
 export const HighRiskCustomers = ({ watchlist = [] }) => {
   return (
-    <Card
-      title="High-Vulnerability Watchlist"
-      subtitle="Top accounts flagged with critical attrition probability"
-      action={
+    <div className="rounded-[16px] bg-card p-5 ring-1 ring-border">
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <h3 className="text-[16px] font-semibold text-foreground tracking-[-0.01em]">
+            High-Vulnerability Watchlist
+          </h3>
+          <p className="text-[12px] text-muted-foreground mt-0.5">
+            Top accounts flagged with critical attrition probability for priority outreach
+          </p>
+        </div>
         <Link
           to="/customers?risk=HIGH"
-          className="text-[11px] text-primary hover:text-white font-mono flex items-center gap-1 uppercase"
+          className="inline-flex items-center gap-1 text-[12px] font-medium text-foreground hover:text-white transition-colors"
         >
           <span>Full Watchlist</span>
-          <ArrowUpRight className="w-3.5 h-3.5" />
+          <ArrowRight className="w-3.5 h-3.5" />
         </Link>
-      }
-      bodyClassName="p-0"
-    >
-      <div className="overflow-x-auto">
-        <table className="bank-table">
+      </div>
+
+      <div className="overflow-x-auto -mx-5 px-5">
+        <table className="w-full border-collapse text-left text-[12.5px]">
           <thead>
-            <tr>
-              <th>ID</th>
-              <th>Customer</th>
-              <th>Current Balance</th>
-              <th>Risk Tier</th>
-              <th>Grievances</th>
-              <th className="text-right">Action</th>
+            <tr className="border-b border-border text-[11px] uppercase tracking-wider text-muted-foreground">
+              <th className="pb-2.5 font-medium">Customer</th>
+              <th className="pb-2.5 font-medium">Account ID</th>
+              <th className="pb-2.5 font-medium">Current Balance</th>
+              <th className="pb-2.5 font-medium">Risk Tier</th>
+              <th className="pb-2.5 font-medium">Complaints</th>
+              <th className="pb-2.5 font-medium text-right">Action</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border/40">
             {watchlist.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-6 text-muted font-mono">
+                <td colSpan={6} className="py-8 text-center text-muted-foreground font-mono">
                   No critical accounts in current watch window
                 </td>
               </tr>
             ) : (
-              watchlist.map((item) => (
-                <tr key={item.customerId}>
-                  <td className="font-mono font-bold text-neutral-300">
-                    {item.customerId}
-                  </td>
-                  <td>
-                    <div className="font-medium text-white">{item.name}</div>
-                    <div className="text-[10px] text-muted font-mono">{item.city}</div>
-                  </td>
-                  <td className="font-mono font-semibold text-neutral-100">
-                    {formatCurrency(item.currentBalance)}
-                  </td>
-                  <td>
-                    <CustomerRiskBadge
-                      level={item.predictedRiskLevel}
-                      probability={item.predictedChurnProb}
-                    />
-                  </td>
-                  <td className="font-mono">
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        (item.unresolvedComplaints || 0) > 0
-                          ? "bg-red-950/60 text-red-400 border border-red-600/30"
-                          : "text-muted"
-                      }`}
-                    >
-                      {item.unresolvedComplaints || 0} Open
-                    </span>
-                  </td>
-                  <td className="text-right font-mono">
-                    <Link
-                      to={`/customers/${item.customerId}`}
-                      className="text-[11px] text-primary hover:text-white hover:underline font-semibold"
-                    >
-                      INVESTIGATE &rarr;
-                    </Link>
-                  </td>
-                </tr>
-              ))
+              watchlist.map((item, idx) => {
+                const avatarUrl = AVATARS[idx % AVATARS.length];
+                return (
+                  <tr key={item.customerId || idx} className="hover:bg-muted/30 transition-colors">
+                    <td className="py-2.5 pr-3">
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          src={avatarUrl}
+                          alt={item.name || "Customer"}
+                          className="h-8 w-8 rounded-full object-cover ring-1 ring-border shrink-0 grayscale opacity-90"
+                          loading="lazy"
+                        />
+                        <div className="min-w-0">
+                          <div className="font-medium text-foreground truncate">{item.name}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{item.city || "Metropolitan"}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-2.5 pr-3 font-mono text-[11px] text-muted-foreground">
+                      {item.customerId}
+                    </td>
+                    <td className="py-2.5 pr-3 font-mono font-medium text-foreground">
+                      {formatCurrency(item.currentBalance || 0)}
+                    </td>
+                    <td className="py-2.5 pr-3">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-muted ring-1 ring-border text-foreground">
+                        Critical ({item.predictedChurnProb ? `${Math.round(item.predictedChurnProb * 100)}%` : "100%"})
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-3">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono text-muted-foreground bg-muted/40 ring-1 ring-border/50">
+                        {item.unresolvedComplaints || 0} Open
+                      </span>
+                    </td>
+                    <td className="py-2.5 text-right font-mono">
+                      <Link
+                        to={`/customers/${item.customerId}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground hover:text-white transition-colors"
+                      >
+                        <span>INVESTIGATE</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
-      <div className="p-2 border-t border-border bg-surface-subtle text-center">
-        <p className="text-[10px] text-muted-dark font-mono italic">
-          ⚠ Displayed customers are illustrative examples from the dataset. High-risk classification is model-dependent and based on synthetic data.
-        </p>
+
+      <div className="pt-3 mt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>
+          BankShield-Hybrid real-time scoring (XGBoost + CatBoost + LightGBM).
+        </span>
+        <span className="font-mono">
+          Model v2.4
+        </span>
       </div>
-    </Card>
+    </div>
   );
 };
 

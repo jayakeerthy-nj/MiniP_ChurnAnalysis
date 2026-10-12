@@ -10,6 +10,40 @@ if (ENV.GEMINI_API_KEY) {
   }
 }
 
+// Active models supporting generateContent in current API version (with resilient fallbacks)
+const CANDIDATE_MODELS = [
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash",
+  "gemini-flash-latest",
+  "gemini-3.8-flash"
+];
+
+let activeModelName: string | null = null;
+
+async function executeGeminiPrompt(prompt: string): Promise<string | null> {
+  if (!genAI || !ENV.GEMINI_API_KEY) return null;
+
+  const modelsToTry = activeModelName
+    ? [activeModelName, ...CANDIDATE_MODELS.filter((m) => m !== activeModelName)]
+    : CANDIDATE_MODELS;
+
+  for (const modelName of modelsToTry) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      if (text) {
+        activeModelName = modelName;
+        return text;
+      }
+    } catch (err: any) {
+      console.warn(`[Gemini API] Model ${modelName} call failed (${err.message}), trying next candidate...`);
+    }
+  }
+
+  return null;
+}
+
 export const geminiService = {
   async generateCustomerInsight(customer: any, features: any, prediction: any): Promise<string> {
     const prompt = `
@@ -33,9 +67,10 @@ Strictly adhere to the numbers provided. Do not hallucinate external figures.
 
     if (genAI && ENV.GEMINI_API_KEY) {
       try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(prompt);
-        return result.response.text().trim();
+        const aiResult = await executeGeminiPrompt(prompt);
+        if (aiResult) {
+          return aiResult;
+        }
       } catch (err: any) {
         console.warn("Gemini API call failed, using high-fidelity fallback:", err.message);
       }
@@ -68,9 +103,10 @@ Provide a concise 3-bullet point Executive Risk Briefing for senior management o
 
     if (genAI && ENV.GEMINI_API_KEY) {
       try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(prompt);
-        return result.response.text().trim();
+        const aiResult = await executeGeminiPrompt(prompt);
+        if (aiResult) {
+          return aiResult;
+        }
       } catch (err: any) {
         console.warn("Gemini executive brief fallback:", err.message);
       }

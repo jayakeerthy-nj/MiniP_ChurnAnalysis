@@ -30,6 +30,7 @@ import {
 } from "recharts";
 
 export const ChurnAnalytics = () => {
+  const { selectedModelId, isCombinedMode, combinedModels, activeModel } = useModel();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,13 +38,15 @@ export const ChurnAnalytics = () => {
 
   useEffect(() => {
     fetchChurn();
-  }, []);
+  }, [selectedModelId, isCombinedMode, combinedModels]);
 
   const fetchChurn = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await analyticsApi.getChurn();
+      const modelParam = isCombinedMode ? "combined" : selectedModelId;
+      const combinedParam = isCombinedMode ? combinedModels.join(",") : undefined;
+      const res = await analyticsApi.getChurn({ model: modelParam, combined: combinedParam });
       setData(res.data);
     } catch (err) {
       console.error("Failed to load churn analytics:", err);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { analyticsApi } from "../services/api";
+import { useModel } from "../context/ModelContext";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Card } from "../components/ui/Card";
 import { RiskChart } from "../components/charts/RiskChart";
@@ -10,19 +11,22 @@ import { formatCurrency, formatPercent } from "../utils/formatters";
 import { ShieldAlert, AlertTriangle, ArrowUpRight, Activity } from "lucide-react";
 
 export const Risk = () => {
+  const { selectedModelId, isCombinedMode, combinedModels, activeModel } = useModel();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchRisk();
-  }, []);
+  }, [selectedModelId, isCombinedMode, combinedModels]);
 
   const fetchRisk = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await analyticsApi.getRisk();
+      const modelParam = isCombinedMode ? "combined" : selectedModelId;
+      const combinedParam = isCombinedMode ? combinedModels.join(",") : undefined;
+      const res = await analyticsApi.getRisk({ model: modelParam, combined: combinedParam });
       setData(res.data);
     } catch (err) {
       console.error("Failed to load risk analytics:", err);

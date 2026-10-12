@@ -1,18 +1,38 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  --card: #131316;
+  --card-foreground: #f4f4f5;
+  --popover: #18181b;
+  --popover-foreground: #f4f4f5;
+  --border: #222226;
+  --border-subtle: #1e1e22;
+  --border-mid: #2a2a30;
+  --muted: #1a1a1e;
+  --muted-foreground: #8e8e93;
+  --accent: #1e1e24;
+  --accent-foreground: #f4f4f5;
+  --ring: #52525b;
+
+  /* BNW Monochrome Chart Tokens */
+  --chart-1: #ffffff;
+  --chart-2: #d4d4d8;
+  --chart-3: #a1a1aa;
+  --chart-4: #71717a;
+  --chart-5: #3f3f46;
+
   --bg-app: #09090b;
-  --bg-surface: #121216;
-  --bg-surface-subtle: #18181f;
-  --bg-surface-hover: #1f1f28;
-  --border-subtle: #27272a;
-  --border-mid: #383842;
+  --bg-surface: #131316;
+  --bg-surface-subtle: #18181c;
+  --bg-surface-hover: #1e1e22;
   --text-primary: #f4f4f5;
-  --text-muted: #9ca3af;
-  --text-dim: #71717a;
-  --color-primary: #3b82f6;
+  --text-muted: #8e8e93;
+  --text-dim: #636366;
+  --color-primary: #f4f4f5;
   --color-safe: #10b981;
   --color-warning: #f59e0b;
   --color-critical: #ef4444;
@@ -41,11 +61,11 @@ body {
   background: #09090b;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #222226;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #333338;
 }
 
 /* Monospace data numbers */
@@ -62,25 +82,25 @@ body {
 }
 
 .bank-table th {
-  background-color: #14141a;
-  color: #9ca3af;
+  background-color: #141418;
+  color: #8e8e93;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 10px 14px;
   text-align: left;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid #222226;
 }
 
 .bank-table td {
   padding: 11px 14px;
-  border-bottom: 1px solid #1f1f26;
+  border-bottom: 1px solid #1a1a1e;
   color: #e4e4e7;
 }
 
 .bank-table tr:hover td {
-  background-color: #181820;
+  background-color: #17171c;
 }
 
 /* Animations */
@@ -97,41 +117,4 @@ body {
 
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out forwards;
-}
-
-
-/* =========================================================
-   Radial Orbital Timeline & 3D Spatial Animation Effects
-   ========================================================= */
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes ping {
-  75%, 100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-ping {
-  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-.bg-gradient-orbital {
-  background: linear-gradient(to bottom right, #6366f1, #3b82f6, #14b8a6);
-}
-
-.shadow-orbital {
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }

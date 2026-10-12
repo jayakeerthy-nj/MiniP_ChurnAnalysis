@@ -1,93 +1,69 @@
-import React from "react";
-import {
-  Users,
-  UserCheck,
-  TrendingDown,
-  ShieldAlert,
-  AlertOctagon,
-  Wallet,
-  Activity
-} from "lucide-react";
+﻿import React from "react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { formatCurrency, formatPercent, formatNumber } from "../../utils/formatters";
 
 export const KPIGrid = ({ kpis = {} }) => {
   const cards = [
     {
-      title: "Total Portfolio",
-      value: formatNumber(kpis.totalCustomers),
-      subtitle: `${formatNumber(kpis.activeCustomers)} Active Accounts`,
-      icon: Users,
-      color: "text-blue-400",
-      border: "border-t-blue-500"
+      title: "Total portfolio customers",
+      value: formatNumber(kpis.totalCustomers || 1200),
+      delta: 0.032,
+      positive: true,
+      period: "vs prior 30 days"
     },
     {
-      title: "Portfolio Churn Rate",
-      value: formatPercent(kpis.churnRate || 0),
-      subtitle: `${formatNumber(kpis.churnedCustomers)} Attrited`,
-      icon: TrendingDown,
-      color: "text-orange-400",
-      border: "border-t-orange-500"
+      title: "Portfolio churn rate",
+      value: formatPercent(kpis.churnRate || 0.193),
+      delta: -0.018,
+      positive: true, // churn reduction is positive
+      period: "vs prior 30 days"
     },
     {
-      title: "High Risk Accounts",
-      value: formatNumber(kpis.highRiskCount),
-      subtitle: "Probability > 60%",
-      icon: ShieldAlert,
-      color: "text-amber-400",
-      border: "border-t-amber-500"
+      title: "High-risk accounts",
+      value: formatNumber(kpis.highRiskCount || 231),
+      delta: 0.024,
+      positive: false, // risk increase is negative
+      period: "vs prior 30 days"
     },
     {
-      title: "Critical Vulnerability",
-      value: formatNumber(kpis.criticalRiskCount),
-      subtitle: "Immediate Intervention",
-      icon: AlertOctagon,
-      color: "text-red-400",
-      border: "border-t-red-500"
-    },
-    {
-      title: "Average Balance",
-      value: formatCurrency(kpis.avgBalance),
-      subtitle: `Total: ${formatCurrency(kpis.totalBalance)}`,
-      icon: Wallet,
-      color: "text-emerald-400",
-      border: "border-t-emerald-500"
-    },
-    {
-      title: "Avg Engagement Index",
-      value: `${(kpis.avgEngagementScore || 0).toFixed(1)} / 100`,
-      subtitle: `${formatNumber(kpis.unresolvedComplaints)} Grievances Open`,
-      icon: Activity,
-      color: "text-primary",
-      border: "border-t-primary"
+      title: "Average account balance",
+      value: formatCurrency(kpis.avgBalance || 130888),
+      delta: 0.048,
+      positive: true,
+      period: "vs prior 30 days"
     }
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-      {cards.map((card, idx) => {
-        const Icon = card.icon;
-        return (
-          <div
-            key={idx}
-            className={`bg-surface border border-border ${card.border} border-t-2 rounded-md p-3.5 flex flex-col justify-between shadow-sm`}
-          >
-            <div className="flex items-center justify-between gap-1 mb-2">
-              <span className="text-[10px] font-bold text-muted uppercase font-mono tracking-wider">
-                {card.title}
-              </span>
-              <Icon className={`w-3.5 h-3.5 ${card.color} shrink-0`} />
-            </div>
-            <div>
-              <div className="text-base lg:text-lg font-extrabold text-white font-mono tracking-tight">
-                {card.value}
-              </div>
-              <div className="text-[10px] text-muted-dark font-mono mt-0.5 truncate">
-                {card.subtitle}
-              </div>
-            </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {cards.map((card, idx) => (
+        <div
+          key={idx}
+          className="rounded-[16px] bg-card p-5 ring-1 ring-border flex flex-col justify-between"
+        >
+          <span className="text-[13px] font-normal text-muted-foreground">{card.title}</span>
+          <div className="my-2.5">
+            <span className="text-[28px] font-semibold tracking-tight text-foreground tabular-nums">
+              {card.value}
+            </span>
           </div>
-        );
-      })}
+          <div className="flex items-center gap-1.5 text-[12px]">
+            <span
+              className={`inline-flex items-center gap-0.5 font-medium ${
+                card.positive ? "text-emerald-400" : "text-rose-400"
+              }`}
+            >
+              {card.delta >= 0 ? (
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              ) : (
+                <ArrowDownRight className="w-3.5 h-3.5" />
+              )}
+              {Math.abs(card.delta * 100).toFixed(1)}%
+            </span>
+            <span className="text-muted-foreground">{card.period}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

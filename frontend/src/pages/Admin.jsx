@@ -117,10 +117,10 @@ export const Admin = () => {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-md transition-all font-medium ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium text-xs ${
                 activeTab === tab.key
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-surface-subtle text-muted hover:text-white hover:bg-surface-hover border border-border"
+                  ? "bg-white text-black font-semibold shadow-sm ring-1 ring-white"
+                  : "bg-neutral-900 text-neutral-300 hover:text-white hover:bg-neutral-800 border border-neutral-700"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -161,7 +161,7 @@ export const Admin = () => {
                     <div className="text-2xl font-bold font-mono text-emerald-400">
                       {rocAuc.toFixed(4)}
                     </div>
-                    <div className="text-[11px] text-muted font-mono mt-1">
+                    <div className="text-[11px] text-neutral-300 font-mono mt-1">
                       Held-Out Test Set (N=2,000)
                     </div>
                   </Card>
@@ -169,7 +169,7 @@ export const Admin = () => {
                     <div className="text-2xl font-bold font-mono text-primary">
                       {f1.toFixed(4)}
                     </div>
-                    <div className="text-[11px] text-muted font-mono mt-1">
+                    <div className="text-[11px] text-neutral-300 font-mono mt-1">
                       PR-AUC: {prAuc.toFixed(4)}
                     </div>
                   </Card>
@@ -177,7 +177,7 @@ export const Admin = () => {
                     <div className="text-2xl font-bold font-mono text-emerald-400">
                       {brier.toFixed(4)}
                     </div>
-                    <div className="text-[11px] text-muted font-mono mt-1">
+                    <div className="text-[11px] text-neutral-300 font-mono mt-1">
                       Platt Calibrated Sigmoid
                     </div>
                   </Card>
@@ -206,19 +206,19 @@ export const Admin = () => {
                   >
                     <div className="grid grid-cols-2 gap-3 font-mono text-xs">
                       <div className="p-2 bg-surface-subtle border border-border rounded">
-                        <span className="text-muted block text-[10px] uppercase">Validation Protocol:</span>
+                        <span className="text-neutral-300 block text-[10px] uppercase">Validation Protocol:</span>
                         <span className="text-white font-bold">5-Fold Stratified OOF</span>
                       </div>
                       <div className="p-2 bg-surface-subtle border border-border rounded">
-                        <span className="text-muted block text-[10px] uppercase">Feature Dimensions:</span>
+                        <span className="text-neutral-300 block text-[10px] uppercase">Feature Dimensions:</span>
                         <span className="text-white font-bold">{modelData?.featuresCount || 39} Columns</span>
                       </div>
                       <div className="p-2 bg-surface-subtle border border-border rounded">
-                        <span className="text-muted block text-[10px] uppercase">Calibration:</span>
+                        <span className="text-neutral-300 block text-[10px] uppercase">Calibration:</span>
                         <span className="text-emerald-400 font-bold">Platt Sigmoid (cv=5)</span>
                       </div>
                       <div className="p-2 bg-surface-subtle border border-border rounded">
-                        <span className="text-muted block text-[10px] uppercase">Rollback Target:</span>
+                        <span className="text-neutral-300 block text-[10px] uppercase">Rollback Target:</span>
                         <span className="text-primary font-bold">xgb-v1.4 (model.joblib)</span>
                       </div>
                     </div>
@@ -240,7 +240,7 @@ export const Admin = () => {
                   )}
                   <form onSubmit={handleCreateUser} className="space-y-3 font-mono text-xs">
                     <div>
-                      <label className="text-muted block text-[10px] uppercase mb-1">Full Name</label>
+                      <label className="text-neutral-300 block text-[10px] uppercase mb-1">Full Name</label>
                       <input
                         type="text"
                         value={newUser.name}
@@ -251,7 +251,7 @@ export const Admin = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-muted block text-[10px] uppercase mb-1">Email</label>
+                      <label className="text-neutral-300 block text-[10px] uppercase mb-1">Email</label>
                       <input
                         type="email"
                         value={newUser.email}
@@ -262,7 +262,7 @@ export const Admin = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-muted block text-[10px] uppercase mb-1">Initial Password</label>
+                      <label className="text-neutral-300 block text-[10px] uppercase mb-1">Initial Password</label>
                       <input
                         type="password"
                         value={newUser.password}
@@ -273,7 +273,7 @@ export const Admin = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-muted block text-[10px] uppercase mb-1">Role Assignment</label>
+                      <label className="text-neutral-300 block text-[10px] uppercase mb-1">Role Assignment</label>
                       <select
                         value={newUser.role}
                         onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
@@ -306,7 +306,7 @@ export const Admin = () => {
                         {users.map((u, idx) => (
                           <tr key={u._id || idx}>
                             <td className="font-semibold text-white">{u.name}</td>
-                            <td className="font-mono text-muted text-xs">{u.email}</td>
+                            <td className="font-mono text-neutral-300 text-xs">{u.email}</td>
                             <td>
                               <span
                                 className={`text-[10px] font-mono px-2 py-0.5 rounded border uppercase font-bold ${
@@ -346,14 +346,14 @@ export const Admin = () => {
                   <tbody>
                     {auditLogs.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="text-center py-6 text-muted font-mono">
+                        <td colSpan={4} className="text-center py-6 text-neutral-300 font-mono">
                           No audit entries logged in current session
                         </td>
                       </tr>
                     ) : (
                       auditLogs.map((log, idx) => (
                         <tr key={idx}>
-                          <td className="font-mono text-xs text-muted">
+                          <td className="font-mono text-xs text-neutral-300">
                             {formatDate(log.timestamp)} {new Date(log.timestamp).toLocaleTimeString()}
                           </td>
                           <td className="font-semibold text-white">{log.userEmail || "System"}</td>
@@ -378,9 +378,9 @@ export const Admin = () => {
                   </div>
                 )}
                 <div className="border-2 border-dashed border-border p-8 rounded-md text-center space-y-3">
-                  <UploadCloud className="w-10 h-10 text-muted mx-auto" />
+                  <UploadCloud className="w-10 h-10 text-neutral-300 mx-auto" />
                   <div className="text-sm font-semibold text-white font-mono">Select CSV File for Ingestion</div>
-                  <p className="text-xs text-muted max-w-sm mx-auto font-sans">
+                  <p className="text-xs text-neutral-300 max-w-sm mx-auto font-sans">
                     Dataset must include customer demographics, balance, transaction counts, digital usage, and complaints.
                   </p>
                   <input
@@ -388,7 +388,7 @@ export const Admin = () => {
                     accept=".csv"
                     onChange={handleFileUpload}
                     disabled={uploading}
-                    className="mt-2 text-xs text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover cursor-pointer"
+                    className="mt-2 text-xs text-neutral-300 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover cursor-pointer"
                   />
                 </div>
               </div>

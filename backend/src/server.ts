@@ -55,9 +55,10 @@ app.use((req, res, next) => {
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 1000,
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.path === "/health" || req.path.endsWith("/models"),
   message: { success: false, error: "Too many requests, please try again later." }
 });
 app.use("/api/", limiter);

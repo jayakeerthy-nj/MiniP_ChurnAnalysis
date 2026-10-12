@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+﻿/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
@@ -10,8 +10,8 @@ export default {
       colors: {
         background: "#09090b",
         foreground: "#f4f4f5",
-        secondary: {
-          DEFAULT: "#27272a",
+        card: {
+          DEFAULT: "#121216",
           foreground: "#f4f4f5"
         },
         popover: {
@@ -19,12 +19,21 @@ export default {
           foreground: "#f4f4f5"
         },
         "popover-foreground": "#f4f4f5",
+        secondary: {
+          DEFAULT: "#27272a",
+          foreground: "#f4f4f5"
+        },
         surface: "#121216",
         "surface-subtle": "#18181f",
         "surface-hover": "#22222b",
         panel: "#14141a",
         border: "#27272a",
         "border-light": "#383842",
+        ring: "#3b82f6",
+        accent: {
+          DEFAULT: "#27272a",
+          foreground: "#f4f4f5"
+        },
         primary: {
           DEFAULT: "#3b82f6",
           hover: "#2563eb",
@@ -35,7 +44,8 @@ export default {
         critical: "#ef4444",
         danger: "#ef4444",
         muted: {
-          DEFAULT: "#9ca3af",
+          DEFAULT: "#a1a1aa",
+          foreground: "#a1a1aa",
           dark: "#71717a"
         }
       },

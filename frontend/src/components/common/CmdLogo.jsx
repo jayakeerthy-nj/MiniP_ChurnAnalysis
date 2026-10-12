@@ -8,7 +8,7 @@ export const CmdLogo = ({ size = "md", showSubtitle = true, className = "" }) =>
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
       {/* Icon Badge */}
       <div
-        className={`rounded bg-neutral-900 border border-border flex items-center justify-center font-mono font-black text-primary shadow-sm shrink-0 ${
+        className={`rounded bg-neutral-900 border border-neutral-700 flex items-center justify-center font-mono font-black text-white shadow-sm shrink-0 ${
           isSmall ? "w-6 h-6 text-xs" : isLarge ? "w-10 h-10 text-base" : "w-8 h-8 text-sm"
         }`}
       >
@@ -23,12 +23,12 @@ export const CmdLogo = ({ size = "md", showSubtitle = true, className = "" }) =>
             isSmall ? "text-xs" : isLarge ? "text-lg" : "text-sm"
           }`}
         >
-          <span className="text-[10px] text-muted font-sans font-medium uppercase tracking-widest ml-1 hidden sm:inline">
+          <span className="text-[11px] text-neutral-200 font-sans font-semibold uppercase tracking-widest ml-1 hidden sm:inline">
             Risk & Churn
           </span>
         </div>
         {showSubtitle && !isSmall && (
-          <div className="text-[9.5px] text-muted-dark font-mono uppercase tracking-wider">
+          <div className="text-[9.5px] text-neutral-400 font-mono uppercase tracking-wider">
             Decision Engine
           </div>
         )}

@@ -9,4 +9,4 @@ analyticsRouter.get("/risk", authenticate, analyticsController.getRisk);
 analyticsRouter.get("/churn", authenticate, analyticsController.getChurn);
 analyticsRouter.get("/segments", authenticate, analyticsController.getSegments);
 analyticsRouter.get("/executive-brief", authenticate, analyticsController.getExecutiveBrief);
-analyticsRouter.get("/models", authenticate, analyticsController.getModels);
+analyticsRouter.get("/models", analyticsController.getModels);
