@@ -240,41 +240,48 @@ export const Admin = () => {
                   )}
                   <form onSubmit={handleCreateUser} className="space-y-3 font-mono text-xs">
                     <div>
-                      <label className="text-neutral-300 block text-[10px] uppercase mb-1">Full Name</label>
+                      <label htmlFor="new-user-name" className="text-neutral-300 block text-[10px] uppercase mb-1">Full Name</label>
                       <input
+                        id="new-user-name"
                         type="text"
                         value={newUser.name}
                         onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
                         required
+                        autoComplete="name"
                         className="w-full bg-surface-subtle border border-border rounded px-3 py-2 text-white focus:outline-none focus:border-primary"
                         placeholder="e.g. Rahul Sen"
                       />
                     </div>
                     <div>
-                      <label className="text-neutral-300 block text-[10px] uppercase mb-1">Email</label>
+                      <label htmlFor="new-user-email" className="text-neutral-300 block text-[10px] uppercase mb-1">Email</label>
                       <input
+                        id="new-user-email"
                         type="email"
                         value={newUser.email}
                         onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                         required
+                        autoComplete="email"
                         className="w-full bg-surface-subtle border border-border rounded px-3 py-2 text-white focus:outline-none focus:border-primary"
                         placeholder="user@bank.com"
                       />
                     </div>
                     <div>
-                      <label className="text-neutral-300 block text-[10px] uppercase mb-1">Initial Password</label>
+                      <label htmlFor="new-user-password" className="text-neutral-300 block text-[10px] uppercase mb-1">Initial Password</label>
                       <input
+                        id="new-user-password"
                         type="password"
                         value={newUser.password}
                         onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                         required
+                        autoComplete="new-password"
                         className="w-full bg-surface-subtle border border-border rounded px-3 py-2 text-white focus:outline-none focus:border-primary"
                         placeholder="••••••••"
                       />
                     </div>
                     <div>
-                      <label className="text-neutral-300 block text-[10px] uppercase mb-1">Role Assignment</label>
+                      <label htmlFor="new-user-role" className="text-neutral-300 block text-[10px] uppercase mb-1">Role Assignment</label>
                       <select
+                        id="new-user-role"
                         value={newUser.role}
                         onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                         className="w-full bg-surface-subtle border border-border rounded px-3 py-2 text-white focus:outline-none focus:border-primary"

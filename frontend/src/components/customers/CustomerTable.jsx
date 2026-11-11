@@ -76,10 +76,10 @@ export const CustomerTable = ({
       render: (row) => (
         <Link
           to={`/customers/${row.customerId}`}
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-white px-2 py-1 rounded bg-surface-subtle hover:bg-primary border border-border transition-colors font-mono uppercase"
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-white px-3 py-1.5 sm:px-2 sm:py-1 rounded bg-surface-subtle hover:bg-primary border border-border transition-colors font-mono uppercase min-h-[36px] sm:min-h-0"
         >
           <span>360 Profile</span>
-          <ChevronRight className="w-3 h-3" />
+          <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       )
     }

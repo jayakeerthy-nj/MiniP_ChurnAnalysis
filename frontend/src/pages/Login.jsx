@@ -80,16 +80,21 @@ export const Login = () => {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block">
+              <label
+                htmlFor="login-email"
+                className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block"
+              >
                 Institutional Email
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="analyst@bank.com"
+                  autoComplete="email"
                   className="w-full bg-neutral-900/90 border border-neutral-800 rounded-lg pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 font-grotesk transition-colors"
                   required
                 />
@@ -97,16 +102,21 @@ export const Login = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block">
+              <label
+                htmlFor="login-password"
+                className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block"
+              >
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
+                  id="login-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   className="w-full bg-neutral-900/90 border border-neutral-800 rounded-lg pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 font-grotesk transition-colors"
                   required
                 />
