@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -13,29 +13,39 @@
   --border-subtle: #1e1e22;
   --border-mid: #2a2a30;
   --muted: #1a1a1e;
-  --muted-foreground: #8e8e93;
+  --muted-foreground: #a1a1aa;
   --accent: #1e1e24;
   --accent-foreground: #f4f4f5;
-  --ring: #52525b;
+  --ring: #3b82f6;
 
-  /* BNW Monochrome Chart Tokens */
+  /* BNW Monochrome Chart Tokens with high-contrast floor */
   --chart-1: #ffffff;
-  --chart-2: #d4d4d8;
-  --chart-3: #a1a1aa;
-  --chart-4: #71717a;
-  --chart-5: #3f3f46;
+  --chart-2: #e4e4e7;
+  --chart-3: #cbd5e1;
+  --chart-4: #94a3b8;
+  --chart-5: #64748b;
 
   --bg-app: #09090b;
   --bg-surface: #131316;
   --bg-surface-subtle: #18181c;
   --bg-surface-hover: #1e1e22;
   --text-primary: #f4f4f5;
-  --text-muted: #8e8e93;
-  --text-dim: #636366;
+  --text-muted: #a1a1aa;
+  --text-dim: #94a3b8;
   --color-primary: #f4f4f5;
   --color-safe: #10b981;
   --color-warning: #f59e0b;
   --color-critical: #ef4444;
+}
+
+::selection {
+  background-color: rgba(59, 130, 246, 0.35);
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 * {
@@ -47,7 +57,7 @@
 body {
   background-color: #09090b;
   color: #f4f4f5;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Host Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -117,4 +127,16 @@ body {
 
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-spin,
+  .animate-fade-in {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
 }

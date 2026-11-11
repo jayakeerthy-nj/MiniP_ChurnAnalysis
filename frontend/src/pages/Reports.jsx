@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { reportApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { Loading } from "../components/ui/Loading";
+import { ErrorBanner } from "../components/common/ErrorBanner";
 import { formatCurrency, formatPercent, formatDate, formatNumber } from "../utils/formatters";
 import { FileText, Download, CheckCircle, ShieldCheck, BarChart3 } from "lucide-react";
 
@@ -59,10 +60,12 @@ export const Reports = () => {
         }
       />
 
+      <ErrorBanner error={error} onRetry={fetchReport} />
+
       {/* Metadata Strip */}
-      <div className="bg-surface border border-border p-4 rounded-md flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-muted">
+      <div className="bg-surface border border-border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono text-muted">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>REPORT STATUS: <strong className="text-white">AUTO-GENERATED (DEMO)</strong></span>
         </div>
         <div>
@@ -74,7 +77,7 @@ export const Reports = () => {
       </div>
 
       {/* Executive KPI Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <Card title="Total Accounts" bodyClassName="p-4">
           <div className="text-2xl font-bold font-mono text-white">
             {formatNumber(metrics.totalCustomers || 10000)}

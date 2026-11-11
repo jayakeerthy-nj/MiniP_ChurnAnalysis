@@ -99,10 +99,13 @@ __pycache__/
 .coverage
 .coverage.*
 htmlcov/
+coverage/
+**/coverage/
 .mypy_cache/
 **/.mypy_cache/
 .ruff_cache/
 **/.ruff_cache/
+**/.matplotlib/
 *.egg-info/
 **/*.egg-info/
 dist/
@@ -130,6 +133,7 @@ dump.rdb
 # -----------------------------------------------------------------------------
 .DS_Store
 .DS_Store?
+**/.DS_Store
 ._*
 .Spotlight-V100
 .Trashes
@@ -154,6 +158,8 @@ Desktop.ini
 *~
 *.sublime-project
 *.sublime-workspace
+.impeccable/
+**/.impeccable/
 
 # -----------------------------------------------------------------------------
 # 6. Temporary & Log Files
@@ -164,3 +170,5 @@ logs/
 *.tmp
 *.temp
 *.bak
+scratch/
+**/scratch/

@@ -42,7 +42,7 @@ The predictive core of this platform runs **BankShield-Hybrid**: a multi-model s
 ## 2. Tech Stack
 
 - **Frontend**: **React.js (v18)** + **JavaScript (JSX)** + **Vite** + **Tailwind CSS** + **Recharts** + **Lucide React** (Port `5173`)
-- **Backend**: **Node.js** + **Express** + **TypeScript** + **Mongoose** (Port `5000`)
+- **Backend**: **Node.js** + **Express** + **TypeScript** + **Mongoose** (Port `5001` - prevents conflict with macOS AirPlay on `5000`)
 - **ML Service (BankShield-Hybrid)**: **Python** + **FastAPI** + **XGBoost** + **CatBoost** + **LightGBM** + **Scikit-Learn** + **SHAP** (Port `8000`)
 - **Database**: **MongoDB** (Local or MongoDB Atlas)
 - **AI Synthesis**: **Google Gemini API** (invoked exclusively via backend server)
@@ -63,7 +63,7 @@ The predictive core of this platform runs **BankShield-Hybrid**: a multi-model s
                                    v
                        +-----------------------+
                        |    BACKEND SERVER     |
-                       | Express + TypeScript  |  Port 5000
+                       | Express + TypeScript  |  Port 5001
                        +---+-------+-------+---+
                            |       |       |
                            v       |       v
@@ -153,25 +153,25 @@ The system enforces authentication using JWT tokens and role authorizations:
 ### Prerequisites
 - **Node.js**: v18 or higher
 - **npm**: v9 or higher
-- **Python**: v3.10+ (for ML service)
+- **Python**: v3.9 or higher (for ML service)
 - **MongoDB**: Local instance running on `mongodb://localhost:27017/banking_churn` or MongoDB Atlas URI
-- **Docker**
+- **macOS Requirement**: `brew install libomp` (required for Apple Silicon XGBoost OpenMP acceleration)
 
 ### 1. Clone & Install Root Dependencies
 ```bash
 git clone <repo-url>
 cd MiniP_ChurnAnalysis
-npm install
+npm run install:all
 ```
 
 ### 2. Configure Environment Variables
 
-**Root / Backend (`backend/.env` or `.env`):**
+**Root / Backend (`.env` and `backend/.env`):**
 ```bash
 cp .env.example .env
 ```
 ```env
-PORT=5000
+PORT=5001
 MONGODB_URI=mongodb://localhost:27017/banking_churn
 JWT_ACCESS_SECRET=your_jwt_access_secret_key_here
 JWT_REFRESH_SECRET=your_jwt_refresh_secret_key_here
@@ -180,8 +180,11 @@ GEMINI_API_KEY=your_gemini_api_key_optional
 ```
 
 **Frontend (`frontend/.env`):**
+```bash
+cp frontend/.env.example frontend/.env
+```
 ```env
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=http://localhost:5001
 ```
 
 ### 3. Setup Python ML Microservice
@@ -194,15 +197,13 @@ cd ..
 ```
 
 ### 4. Start Database & Seed Data
-Start the MongoDB database container using Docker:
+Start the MongoDB database container using Docker (or connect directly to MongoDB Atlas in `.env`):
 ```bash
 docker-compose up -d mongodb
 ```
 
 Seed the database with initial customer records, transactions, and user accounts:
 ```bash
-cd backend
-npm install
 npm run seed
 ```
 
@@ -210,13 +211,13 @@ npm run seed
 
 ## 7. Running the Platform
 
-### Option A: Run All Services Simultaneously
+### Run All Services Simultaneously
 ```bash
 npm run dev
 ```
 This concurrently starts:
 - **ML Service** on `http://localhost:8000`
-- **Backend API** on `http://localhost:5000`
+- **Backend API** on `http://localhost:5001`
 - **React Frontend** on `http://localhost:5173`
 ---
 

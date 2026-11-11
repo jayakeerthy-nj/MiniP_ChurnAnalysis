@@ -3,8 +3,8 @@ import { useModel } from "../context/ModelContext";
 import React, { useState } from "react";
 import { simulatorApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { CustomerRiskBadge } from "../components/customers/CustomerRiskBadge";
 import { formatCurrency, formatPercent } from "../utils/formatters";
 import { Sliders, RefreshCw, ArrowRight, TrendingDown, TrendingUp, CheckCircle, ShieldAlert } from "lucide-react";
@@ -23,25 +23,34 @@ export const Simulator = () => {
   const [error, setError] = useState(null);
 
   const runSimulation = async () => {
+    const trimmedId = customerId?.trim();
+    if (!trimmedId) {
+      setError("Please specify a valid Target Account Reference (e.g. CUST-1004).");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       const res = await simulatorApi.simulate({
-        customerId,
+        customerId: trimmedId,
         modelId: isCombinedMode ? "combined" : selectedModelId,
         combinedModels: isCombinedMode ? combinedModels : undefined,
         modifications: {
-          transactionsPerMonth: Number(txPerMonth),
-          digitalUsagePercentage: Number(digitalPct),
-          unresolvedComplaints: Number(unresolvedComplaints),
-          numberOfProducts: Number(products),
-          currentBalance: Number(balance)
+          transactionsPerMonth: Math.max(0, Math.min(60, Number(txPerMonth) || 0)),
+          digitalUsagePercentage: Math.max(0, Math.min(100, Number(digitalPct) || 0)),
+          unresolvedComplaints: Math.max(0, Math.min(5, Number(unresolvedComplaints) || 0)),
+          numberOfProducts: Math.max(1, Math.min(6, Number(products) || 1)),
+          currentBalance: Math.max(0, Number(balance) || 0)
         }
       });
       setResult(res.data.simulation);
     } catch (err) {
       console.error("Simulation error:", err);
-      setError("Unable to compute live ML simulation against FastAPI service.");
+      setError(
+        err.response?.data?.message ||
+        "Unable to compute live ML simulation against FastAPI service. Ensure ML service is running."
+      );
     } finally {
       setLoading(false);
     }
@@ -72,98 +81,114 @@ export const Simulator = () => {
             <div className="space-y-4 font-mono text-xs">
               {/* Target Customer ID */}
               <div>
-                <label className="text-[11px] font-bold text-muted uppercase block mb-1">
+                <label htmlFor="sim-customer-id" className="text-[11px] font-bold text-muted uppercase block mb-1">
                   Target Account Reference
                 </label>
                 <input
+                  id="sim-customer-id"
                   type="text"
                   value={customerId}
                   onChange={(e) => setCustomerId(e.target.value)}
                   placeholder="e.g. CUST-1004"
-                  className="w-full bg-surface-subtle border border-border rounded px-3 py-2 text-white focus:outline-none focus:border-primary"
+                  className="w-full bg-surface-subtle border border-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary font-mono"
                 />
               </div>
 
               {/* Transaction Frequency Slider */}
               <div className="space-y-1.5 pt-2 border-t border-border">
                 <div className="flex justify-between">
-                  <span className="text-muted">Monthly Transaction Volume</span>
+                  <label htmlFor="sim-tx-slider" className="text-muted cursor-pointer">Monthly Transaction Volume</label>
                   <span className="text-white font-bold">{txPerMonth} tx / mo</span>
                 </div>
                 <input
+                  id="sim-tx-slider"
                   type="range"
                   min="0"
                   max="60"
                   value={txPerMonth}
                   onChange={(e) => setTxPerMonth(e.target.value)}
-                  className="w-full accent-primary bg-surface-subtle"
+                  aria-label="Monthly Transaction Volume"
+                  aria-valuenow={txPerMonth}
+                  className="w-full accent-primary bg-surface-subtle cursor-pointer"
                 />
               </div>
 
               {/* Digital Usage Slider */}
               <div className="space-y-1.5 pt-2 border-t border-border">
                 <div className="flex justify-between">
-                  <span className="text-muted">Digital Banking Adoption</span>
+                  <label htmlFor="sim-digital-slider" className="text-muted cursor-pointer">Digital Banking Adoption</label>
                   <span className="text-primary font-bold">{digitalPct}%</span>
                 </div>
                 <input
+                  id="sim-digital-slider"
                   type="range"
                   min="0"
                   max="100"
                   value={digitalPct}
                   onChange={(e) => setDigitalPct(e.target.value)}
-                  className="w-full accent-primary bg-surface-subtle"
+                  aria-label="Digital Banking Adoption Percentage"
+                  aria-valuenow={digitalPct}
+                  className="w-full accent-primary bg-surface-subtle cursor-pointer"
                 />
               </div>
 
               {/* Grievances Slider */}
               <div className="space-y-1.5 pt-2 border-t border-border">
                 <div className="flex justify-between">
-                  <span className="text-muted">Unresolved Customer Grievances</span>
+                  <label htmlFor="sim-grievance-slider" className="text-muted cursor-pointer">Unresolved Customer Grievances</label>
                   <span className={`font-bold ${unresolvedComplaints > 0 ? "text-red-400" : "text-emerald-400"}`}>
                     {unresolvedComplaints} Open
                   </span>
                 </div>
                 <input
+                  id="sim-grievance-slider"
                   type="range"
                   min="0"
                   max="5"
                   value={unresolvedComplaints}
                   onChange={(e) => setUnresolvedComplaints(e.target.value)}
-                  className="w-full accent-primary bg-surface-subtle"
+                  aria-label="Unresolved Customer Grievances count"
+                  aria-valuenow={unresolvedComplaints}
+                  className="w-full accent-primary bg-surface-subtle cursor-pointer"
                 />
               </div>
 
               {/* Product Count */}
               <div className="space-y-1.5 pt-2 border-t border-border">
                 <div className="flex justify-between">
-                  <span className="text-muted">Active Bank Products</span>
+                  <label htmlFor="sim-product-slider" className="text-muted cursor-pointer">Active Bank Products</label>
                   <span className="text-white font-bold">{products} Products</span>
                 </div>
                 <input
+                  id="sim-product-slider"
                   type="range"
                   min="1"
                   max="6"
                   value={products}
                   onChange={(e) => setProducts(e.target.value)}
-                  className="w-full accent-primary bg-surface-subtle"
+                  aria-label="Active Bank Products count"
+                  aria-valuenow={products}
+                  className="w-full accent-primary bg-surface-subtle cursor-pointer"
                 />
               </div>
 
               {/* Current Balance */}
               <div className="space-y-1.5 pt-2 border-t border-border">
                 <div className="flex justify-between">
-                  <span className="text-muted">Simulated Balance</span>
+                  <label htmlFor="sim-balance-slider" className="text-muted cursor-pointer">Simulated Balance</label>
                   <span className="text-white font-bold">{formatCurrency(balance)}</span>
                 </div>
                 <input
+                  id="sim-balance-slider"
                   type="range"
                   min="5000"
                   max="1000000"
                   step="5000"
                   value={balance}
                   onChange={(e) => setBalance(e.target.value)}
-                  className="w-full accent-primary bg-surface-subtle"
+                  aria-label="Simulated Balance in INR"
+                  aria-valuenow={balance}
+                  className="w-full accent-primary bg-surface-subtle cursor-pointer"
                 />
               </div>
 

@@ -3,7 +3,8 @@ import { customerApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import { CustomerTable } from "../components/customers/CustomerTable";
 import { CustomerCard } from "../components/customers/CustomerCard";
-import { Button } from "../components/ui/Button";
+import { Button } from "../components/ui/button";
+import { ErrorBanner } from "../components/common/ErrorBanner";
 import { useDebounce } from "../hooks/useDebounce";
 import {
   Search,
@@ -12,12 +13,14 @@ import {
   ChevronRight,
   LayoutGrid,
   List,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 
 export const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [risk, setRisk] = useState("ALL");
   const [city, setCity] = useState("ALL");
@@ -30,6 +33,7 @@ export const Customers = () => {
   const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const params = { page, limit: 12 };
       if (debouncedSearch) params.search = debouncedSearch;
       if (risk !== "ALL") params.risk = risk;
@@ -40,6 +44,7 @@ export const Customers = () => {
       setPagination(res.data.pagination || { page: 1, totalPages: 1, total: 0 });
     } catch (err) {
       console.error("Failed to fetch customers:", err);
+      setError("Unable to retrieve customer records from the database service. Verify backend connection.");
     } finally {
       setLoading(false);
     }
@@ -67,28 +72,32 @@ export const Customers = () => {
         subtitle="Explore retail and commercial account profiles, behavioral risk indicators, and predicted attrition scores."
         action={
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-surface-subtle border border-border rounded p-0.5">
+            <div className="flex items-center bg-surface-subtle border border-border rounded-lg p-0.5">
               <button
                 type="button"
                 onClick={() => setViewMode("table")}
-                className={`p-1.5 rounded transition-colors ${
+                className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-primary ${
                   viewMode === "table"
                     ? "bg-primary text-white"
                     : "text-muted hover:text-white"
                 }`}
                 title="Table View"
+                aria-label="Switch to Table View"
+                aria-pressed={viewMode === "table"}
               >
                 <List className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
-                className={`p-1.5 rounded transition-colors ${
+                className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-primary ${
                   viewMode === "grid"
                     ? "bg-primary text-white"
                     : "text-muted hover:text-white"
                 }`}
                 title="Grid Cards View"
+                aria-label="Switch to Grid View"
+                aria-pressed={viewMode === "grid"}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
@@ -98,6 +107,7 @@ export const Customers = () => {
               size="sm"
               onClick={fetchCustomers}
               icon={RefreshCw}
+              aria-label="Refresh customer list"
             >
               Refresh
             </Button>
@@ -106,16 +116,18 @@ export const Customers = () => {
       />
 
       {/* Filter and Search Bar */}
-      <div className="bg-surface border border-border rounded-md p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-sm">
+      <div className="bg-surface border border-border rounded-xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-sm">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
+            id="customer-search"
             type="text"
             value={search}
             onChange={handleSearchChange}
             placeholder="Search by customer name or ID..."
-            className="w-full bg-surface-subtle border border-border rounded-md pl-9 pr-3 py-2 text-xs text-white placeholder-muted-dark focus:outline-none focus:border-primary font-mono"
+            aria-label="Search customers by name or ID"
+            className="w-full bg-surface-subtle border border-border rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-mono"
           />
         </div>
 
@@ -130,10 +142,11 @@ export const Customers = () => {
               key={r}
               type="button"
               onClick={() => handleRiskFilter(r)}
-              className={`px-2 py-1 rounded text-[11px] font-medium border transition-all ${
+              aria-pressed={risk === r}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium border transition-all focus:outline-none focus:ring-1 focus:ring-primary ${
                 risk === r
-                  ? "bg-primary text-white border-primary"
-                  : "bg-surface-subtle text-muted hover:text-white border-border"
+                  ? "bg-primary text-white border-primary shadow-xs"
+                  : "bg-surface-subtle text-zinc-300 hover:text-white border-border"
               }`}
             >
               {r}
@@ -141,6 +154,9 @@ export const Customers = () => {
           ))}
         </div>
       </div>
+
+      {/* Error Recovery Banner */}
+      <ErrorBanner error={error} onRetry={fetchCustomers} />
 
       {/* Results Section */}
       {viewMode === "table" ? (
@@ -154,8 +170,8 @@ export const Customers = () => {
       )}
 
       {/* Pagination Footer */}
-      <div className="bg-surface border border-border rounded-md px-4 py-3 flex items-center justify-between text-xs font-mono text-muted">
-        <div>
+      <div className="bg-surface border border-border rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-muted">
+        <div className="text-center sm:text-left">
           Showing page <span className="text-white font-bold">{pagination.page}</span> of{" "}
           <span className="text-white font-bold">{pagination.totalPages}</span> (
           {pagination.total} total accounts)
@@ -167,6 +183,7 @@ export const Customers = () => {
             disabled={page <= 1 || loading}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             icon={ChevronLeft}
+            aria-label="Previous page"
           >
             Previous
           </Button>
@@ -175,6 +192,7 @@ export const Customers = () => {
             size="sm"
             disabled={page >= pagination.totalPages || loading}
             onClick={() => setPage((p) => p + 1)}
+            aria-label="Next page"
           >
             Next &rarr;
           </Button>

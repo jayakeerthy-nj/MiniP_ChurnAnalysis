@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { formatCurrency, formatPercent, formatNumber } from "../../utils/formatters";
 
@@ -39,11 +39,11 @@ export const KPIGrid = ({ kpis = {} }) => {
       {cards.map((card, idx) => (
         <div
           key={idx}
-          className="rounded-[16px] bg-card p-5 ring-1 ring-border flex flex-col justify-between"
+          className="rounded-xl bg-card p-4 sm:p-5 ring-1 ring-border flex flex-col justify-between transition-colors shadow-xs"
         >
-          <span className="text-[13px] font-normal text-muted-foreground">{card.title}</span>
-          <div className="my-2.5">
-            <span className="text-[28px] font-semibold tracking-tight text-foreground tabular-nums">
+          <span className="text-xs sm:text-[13px] font-normal text-muted-foreground">{card.title}</span>
+          <div className="my-2 sm:my-2.5">
+            <span className="text-2xl sm:text-[28px] font-semibold tracking-tight text-foreground tabular-nums">
               {card.value}
             </span>
           </div>

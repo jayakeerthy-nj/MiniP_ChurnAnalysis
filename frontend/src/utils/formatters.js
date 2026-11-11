@@ -19,7 +19,10 @@ export function formatNumber(num) {
 
 export function formatPercent(value, decimals = 1) {
   if (value === undefined || value === null || isNaN(value)) return "0%";
-  return `${Number(value).toFixed(decimals)}%`;
+  const num = Number(value);
+  // Intelligently convert decimal ratio (e.g. 0.184) to percent (18.4%)
+  const pct = num > 0 && num <= 1 ? num * 100 : num;
+  return `${pct.toFixed(decimals)}%`;
 }
 
 export function formatDate(dateStr) {

@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { customerApi } from "../services/api";
 import { CustomerRiskBadge } from "../components/customers/CustomerRiskBadge";
-import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { Loading } from "../components/ui/Loading";
 import { formatCurrency, formatPercent, formatDate } from "../utils/formatters";
 import {
@@ -24,7 +24,8 @@ import {
   Layers,
   Info,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw
 } from "lucide-react";
 
 export const CustomerDetail = () => {
@@ -103,15 +104,33 @@ export const CustomerDetail = () => {
 
   if (error || !data) {
     return (
-      <div className="p-8 text-center space-y-4">
-        <div className="text-red-400 font-mono text-sm font-bold">
-          {error || "Customer record not found"}
+      <div className="p-8 text-center space-y-4 max-w-md mx-auto my-12 bg-surface border border-border rounded-xl shadow-xl">
+        <div className="w-10 h-10 rounded-full bg-red-950/60 border border-red-600/40 flex items-center justify-center mx-auto text-red-400">
+          <AlertCircle className="w-5 h-5" />
         </div>
-        <Link to="/customers">
-          <Button variant="secondary" size="sm" icon={ArrowLeft}>
-            Back to Directory
+        <div className="space-y-1">
+          <h3 className="text-sm font-bold font-mono text-neutral-100 uppercase tracking-wide">
+            Record Retrieval Failed
+          </h3>
+          <p className="text-xs text-red-300 font-mono">
+            {error || "Customer record not found"}
+          </p>
+        </div>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => fetchCustomer360(id)}
+            icon={RefreshCw}
+          >
+            Retry Dossier
           </Button>
-        </Link>
+          <Link to="/customers">
+            <Button variant="secondary" size="sm" icon={ArrowLeft}>
+              Back to Directory
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -170,7 +189,7 @@ export const CustomerDetail = () => {
     <div className="space-y-6">
       {/* Back link & Top Dossier Header */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <Link
             to="/customers"
             className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-white font-mono uppercase"
@@ -199,14 +218,14 @@ export const CustomerDetail = () => {
       </div>
 
       {/* Primary Customer Banner */}
-      <div className="p-5 bg-surface border border-border rounded-md flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded bg-surface-subtle border border-border flex items-center justify-center font-mono font-extrabold text-lg text-primary shrink-0">
+      <div className="p-4 sm:p-5 bg-surface border border-border rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-lg bg-surface-subtle border border-border flex items-center justify-center font-mono font-extrabold text-base sm:text-lg text-primary shrink-0">
             {customerData?.name?.charAt(0) || "C"}
           </div>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-white tracking-tight">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight truncate">
                 {customerData?.name}
               </h1>
               <CustomerRiskBadge
@@ -215,7 +234,7 @@ export const CustomerDetail = () => {
                 size="md"
               />
               <span className="text-[11px] font-mono text-muted">
-                (Calibrated Probability: <strong className="text-white">{(churnProb * 100).toFixed(1)}%</strong>)
+                (Calibrated: <strong className="text-white">{(churnProb * 100).toFixed(1)}%</strong>)
               </span>
             </div>
             <div className="text-xs text-muted font-mono mt-1 flex flex-wrap items-center gap-3">
@@ -314,8 +333,8 @@ export const CustomerDetail = () => {
             title="Dossier Data Provenance"
             subtitle="Data completeness & module readiness"
           >
-            <div className="space-y-2 font-mono text-xs">
-              <div className="p-2.5 bg-surface-subtle border border-border rounded space-y-1">
+            <div className="divide-y divide-border/40 font-mono text-xs">
+              <div className="py-2.5 first:pt-0 last:pb-0 space-y-1">
                 <div className="text-[10px] uppercase text-muted">Feature Space Depth</div>
                 <div className="flex items-center justify-between">
                   <span className="text-white font-bold">39 Engineered Features</span>
@@ -324,7 +343,7 @@ export const CustomerDetail = () => {
                 <div className="text-[10px] text-muted">29 Static + 10 Interaction Indices</div>
               </div>
 
-              <div className="p-2.5 bg-surface-subtle border border-border rounded space-y-1">
+              <div className="py-2.5 first:pt-0 last:pb-0 space-y-1">
                 <div className="text-[10px] uppercase text-muted">Time-To-Churn Survival Model</div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted">Survival Hazard Curve</span>
@@ -333,7 +352,7 @@ export const CustomerDetail = () => {
                 <div className="text-[10px] text-muted-dark">Requires longitudinal event dates</div>
               </div>
 
-              <div className="p-2.5 bg-surface-subtle border border-border rounded space-y-1">
+              <div className="py-2.5 first:pt-0 last:pb-0 space-y-1">
                 <div className="text-[10px] uppercase text-muted">Causal Uplift Modeling</div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted">Treatment-Control Effect</span>
@@ -441,11 +460,11 @@ export const CustomerDetail = () => {
               No complaint records logged for this account.
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y divide-border/40">
               {complaints.map((comp, idx) => (
                 <div
                   key={idx}
-                  className="p-2.5 bg-surface-subtle border border-border rounded text-xs space-y-1"
+                  className="py-3 first:pt-0 last:pb-0 text-xs space-y-1"
                 >
                   <div className="flex items-center justify-between font-mono">
                     <span className="font-semibold text-white">{comp.category || "Service Inquiry"}</span>

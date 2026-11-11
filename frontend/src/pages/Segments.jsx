@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { analyticsApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Card } from "../components/ui/Card";
+import { Card } from "../components/ui/card";
 import { SegmentChart } from "../components/charts/SegmentChart";
 import { Loading } from "../components/ui/Loading";
+import { ErrorBanner } from "../components/common/ErrorBanner";
 import { formatCurrency, formatPercent, formatNumber } from "../utils/formatters";
 import { Users, PieChart, Activity, Wallet, ShieldAlert, ArrowUpRight } from "lucide-react";
 
@@ -42,6 +43,8 @@ export const Segments = () => {
         title="Customer Behavioral Segments (K-Means)"
         subtitle="Unsupervised multi-attribute clustering identifying structural customer archetypes across transactional velocity, balance tiers, and channel preferences."
       />
+
+      <ErrorBanner error={error} onRetry={fetchSegments} />
 
       {/* Cluster Overview Chart */}
       <Card

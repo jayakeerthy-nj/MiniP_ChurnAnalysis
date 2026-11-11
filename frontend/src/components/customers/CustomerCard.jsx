@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Card } from "../ui/Card";
+import { Card } from "../ui/card";
 import { CustomerRiskBadge } from "./CustomerRiskBadge";
 import { formatCurrency, formatPercent } from "../../utils/formatters";
 import { ChevronRight, CreditCard, Activity, Clock } from "lucide-react";

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { adminApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { Loading } from "../components/ui/Loading";
 import { formatDate, formatPercent } from "../utils/formatters";
 import {
@@ -104,7 +104,7 @@ export const Admin = () => {
       />
 
       {/* Admin Tab Selectors */}
-      <div className="flex items-center gap-2 border-b border-border pb-2 text-xs font-mono">
+      <div className="flex items-center gap-2 border-b border-border pb-2 text-xs font-mono overflow-x-auto overscroll-x-contain scrollbar-none">
         {[
           { key: "models", label: "ML Telemetry & Models", icon: Cpu },
           { key: "users", label: "User Access & RBAC", icon: Users },
@@ -117,10 +117,10 @@ export const Admin = () => {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium text-xs ${
+              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg transition-all font-medium text-xs shrink-0 select-none ${
                 activeTab === tab.key
                   ? "bg-white text-black font-semibold shadow-sm ring-1 ring-white"
-                  : "bg-neutral-900 text-neutral-300 hover:text-white hover:bg-neutral-800 border border-neutral-700"
+                  : "bg-surface-subtle text-neutral-300 hover:text-white hover:bg-surface-hover border border-border"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />

@@ -4,31 +4,27 @@ import clsx from "clsx";
 export const PageHeader = ({
   title,
   subtitle,
-  category = "BANKING RISK INTELLIGENCE",
   action,
   className = ""
 }) => {
   return (
     <div
       className={clsx(
-        "p-5 bg-surface border border-border rounded-md flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm",
+        "flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/40",
         className
       )}
     >
-      <div>
-        <span className="text-[10px] font-bold text-primary font-mono tracking-widest uppercase block mb-1">
-          {category}
-        </span>
-        <h1 className="text-lg md:text-xl font-bold text-white tracking-tight">
+      <div className="space-y-0.5">
+        <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-foreground">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-xs text-neutral-300 mt-1 max-w-3xl leading-relaxed font-normal">
+          <p className="text-xs sm:text-[13px] text-muted-foreground max-w-3xl leading-relaxed">
             {subtitle}
           </p>
         )}
       </div>
-      {action && <div className="shrink-0 flex items-center gap-2">{action}</div>}
+      {action && <div className="shrink-0 flex flex-wrap items-center gap-2">{action}</div>}
     </div>
   );
 };

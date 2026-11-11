@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { recommendationApi, analyticsApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { CustomerRiskBadge } from "../components/customers/CustomerRiskBadge";
 import { Loading } from "../components/ui/Loading";
+import { ErrorBanner } from "../components/common/ErrorBanner";
 import { formatPercent } from "../utils/formatters";
 import { Sparkles, ShieldAlert, ArrowRight, CheckCircle, RefreshCw } from "lucide-react";
 
@@ -70,6 +71,8 @@ export const Recommendations = () => {
           </Button>
         }
       />
+
+      <ErrorBanner error={error} onRetry={fetchRecommendations} />
 
       {/* AI Executive Strategy Brief Card */}
       {executiveBrief && (

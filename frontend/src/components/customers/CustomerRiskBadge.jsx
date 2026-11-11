@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge } from "../ui/Badge";
+import { Badge } from "../ui/badge";
 import { getRiskVariant } from "../../utils/formatters";
 
 export const CustomerRiskBadge = ({ level, probability, size = "sm" }) => {

@@ -154,14 +154,31 @@ The application enforces three institutional roles. The interface **must dynamic
 
 ### 6.2 Resilient Offline Handling
 - The dashboard must **never** crash or render a blocking full-page red error box during backend initialization or temporary connection delays.
-- If the backend API on port `5000` is starting up or temporarily offline, the UI renders the calibrated institutional baseline metrics alongside a non-blocking notification banner:
+- If the backend API on port `5001` is starting up or temporarily offline, the UI renders the calibrated institutional baseline metrics alongside a non-blocking notification banner:
   ```
-  [OFFLINE MODE] Live API connection pending (port 5000). Displaying calibrated institutional portfolio baseline. [Retry Connection]
+  [OFFLINE MODE] Live API connection pending (port 5001). Displaying calibrated institutional portfolio baseline. [Retry Connection]
   ```
 
 ---
 
-## 7. Anti-Patterns & Prohibited Practices
+## 7. Craft Floor Invariants & Design Distillation
+
+The design system enforces strict craft-floor rules to maintain an executive, institutional financial terminal:
+
+1. **No Stacked Kickers / Eyebrows:**
+   - Do NOT place uppercase category or tag kickers directly over `h1` or `h2` headings (e.g. `DECISION ENGINE ARCHITECTURE` over a heading). Headings must be self-explanatory.
+2. **No Cards Nested Inside Cards:**
+   - Container cards must not contain inner bordered cards with identical styling. Use flat lists separated by subtle dividers (`divide-y divide-border/40`), white space, or subtle well backgrounds (`bg-surface-subtle`).
+3. **Flat Page Header Architecture:**
+   - Page headers are flat with a bottom hairline divider (`border-b border-border/40`), never boxed in card containers.
+4. **No Stock Emoji for Icons:**
+   - Use Lucide icon glyphs with explicit dimensions (`w-4 h-4`) and semantic coloring.
+5. **No Clutter or Competing Motion in Hero:**
+   - Landing page hero maintains high typographic contrast; 3D/canvas timeline elements belong in dedicated exploration sections, not spinning behind text.
+
+---
+
+## 8. Anti-Patterns & Prohibited Practices
 
 Future AI agents and developers modifying this codebase must adhere to these prohibitions:
 
@@ -170,3 +187,4 @@ Future AI agents and developers modifying this codebase must adhere to these pro
 3. ❌ **Do NOT hardcode model names in components.** Always read from `activeModel` via `useModel()`.
 4. ❌ **Do NOT expose Admin Portal or Simulator to Branch Managers.** Enforce RBAC in both navigation and routing.
 5. ❌ **Do NOT bypass Platt Calibration for BankShield-Hybrid.** Standalone trees output raw probabilities; BankShield-Hybrid provides calibrated isotonic confidence bounds.
+6. ❌ **Do NOT introduce casing mismatches on component imports.** Always import using lowercase paths (`./badge`, `./button`, `./card`) to prevent APFS/Linux filesystem divergences.

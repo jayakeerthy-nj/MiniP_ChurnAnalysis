@@ -9,7 +9,7 @@ import { QuickActions } from "../components/dashboard/QuickActions";
 import { HighRiskCustomers } from "../components/dashboard/HighRiskCustomers";
 import { Loading } from "../components/ui/Loading";
 import { RefreshCw, AlertTriangle } from "lucide-react";
-import { Button } from "../components/ui/Button";
+import { Button } from "../components/ui/button";
 
 // Institutional baseline fallback when backend is starting or offline
 const FALLBACK_DASHBOARD_DATA = {
@@ -118,7 +118,7 @@ export const Dashboard = () => {
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
             <span>
-              <strong className="text-white font-mono uppercase">Offline Mode:</strong> Live backend connection pending (port 5000). Displaying calibrated institutional portfolio baseline.
+              <strong className="text-white font-mono uppercase">Offline Mode:</strong> Live backend connection pending. Displaying calibrated institutional portfolio baseline.
             </span>
           </div>
           <Button

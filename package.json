@@ -7,6 +7,7 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "dev": "concurrently -k -p \"[{name}]\" -n \"ML,BACKEND,FRONTEND\" -c \"yellow.bold,blue.bold,green.bold\" \"npm run dev:ml\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
     "build": "npm --prefix backend run build && npm --prefix frontend run build",
     "seed": "npm --prefix backend run seed",
     "train": "cd ml-service && (test -f venv/bin/python3 && ./venv/bin/python3 training/train.py || python3 training/train.py)",

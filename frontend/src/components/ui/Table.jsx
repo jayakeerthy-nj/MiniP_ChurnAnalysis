@@ -28,13 +28,14 @@ export const Table = ({
   }
 
   return (
-    <div className={clsx("overflow-x-auto border border-border rounded-md", className)}>
+    <div className={clsx("overflow-x-auto overscroll-x-contain border border-border rounded-xl", className)}>
       <table className="bank-table">
         <thead>
           <tr>
             {columns.map((col, idx) => (
               <th
                 key={col.key || idx}
+                scope="col"
                 className={clsx(col.className, col.align === "right" && "text-right")}
               >
                 {col.header}

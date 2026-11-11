@@ -5,6 +5,7 @@ import { ModelProvider } from "./context/ModelContext";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { Loading } from "./components/ui/Loading";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
 // Pages
 import { Landing } from "./pages/Landing";
@@ -22,18 +23,22 @@ import { Admin } from "./pages/Admin";
 
 // Layout Wrapper with sliding taskbar state
 const DashboardLayout = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return typeof window !== "undefined" ? window.innerWidth < 768 : false;
+  });
 
   return (
     <div className="flex h-screen w-screen bg-background overflow-hidden text-neutral-100 font-sans">
       <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <Header
-          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onToggleSidebar={() => setSidebarCollapsed((prev) => !prev)}
           sidebarCollapsed={sidebarCollapsed}
         />
-        <main className="flex-1 overflow-y-auto p-5 md:p-6">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6">
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

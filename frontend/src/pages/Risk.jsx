@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { analyticsApi } from "../services/api";
 import { useModel } from "../context/ModelContext";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Card } from "../components/ui/Card";
+import { Card } from "../components/ui/card";
 import { RiskChart } from "../components/charts/RiskChart";
 import { CustomerRiskBadge } from "../components/customers/CustomerRiskBadge";
 import { Loading } from "../components/ui/Loading";
+import { ErrorBanner } from "../components/common/ErrorBanner";
 import { formatCurrency, formatPercent } from "../utils/formatters";
 import { ShieldAlert, AlertTriangle, ArrowUpRight, Activity } from "lucide-react";
 
@@ -54,6 +55,8 @@ export const Risk = () => {
         title="Risk Matrix & High-Vulnerability Watchlist"
         subtitle="Multivariate decomposition of customer churn risk across demographics, product density, and digital adoption channels."
       />
+
+      <ErrorBanner error={error} onRetry={fetchRisk} />
 
       {/* Grid of Risk Dimensions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

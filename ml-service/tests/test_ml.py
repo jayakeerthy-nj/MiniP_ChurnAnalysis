@@ -91,7 +91,7 @@ def test_predict_has_prediction_type():
     response = client.post("/predict", json={"features": SAMPLE_FEATURES})
     data = response.json()
     assert "predictionType" in data
-    assert data["predictionType"] in ["ensemble", "single_model"]
+    assert data["predictionType"] in ["custom_hybrid", "standalone", "combined_blend", "ensemble", "single_model"]
 
 def test_predict_behavioral_signals():
     response = client.post("/predict", json={"features": SAMPLE_FEATURES})

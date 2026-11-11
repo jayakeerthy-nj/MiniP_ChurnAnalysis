@@ -45,13 +45,31 @@ export const Sidebar = ({ collapsed, setCollapsed }) => {
     navigate("/");
   };
 
+  const handleNavClick = () => {
+    if (typeof window !== "undefined" && window.innerWidth < 768 && setCollapsed) {
+      setCollapsed(true);
+    }
+  };
+
   return (
-    <aside
-      className={clsx(
-        "bg-surface border-r border-border flex flex-col h-screen select-none shrink-0 transition-all duration-300 ease-in-out z-30",
-        collapsed ? "w-[68px]" : "w-64"
+    <>
+      {/* Mobile Drawer Backdrop */}
+      {!collapsed && (
+        <div
+          className="fixed inset-0 bg-black/75 backdrop-blur-xs z-30 md:hidden animate-fade-in"
+          onClick={() => setCollapsed(true)}
+          aria-hidden="true"
+        />
       )}
-    >
+
+      <aside
+        className={clsx(
+          "bg-surface border-r border-border flex flex-col h-screen select-none shrink-0 transition-all duration-300 ease-in-out z-40",
+          collapsed
+            ? "hidden md:flex md:w-[68px]"
+            : "fixed md:relative inset-y-0 left-0 w-64 shadow-2xl md:shadow-none"
+        )}
+      >
       {/* Brand Header */}
       <div className="h-14 border-b border-border flex items-center justify-between px-3.5 bg-panel">
         {!collapsed ? (
@@ -106,6 +124,7 @@ export const Sidebar = ({ collapsed, setCollapsed }) => {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={handleNavClick}
               title={collapsed ? item.label : undefined}
               className={({ isActive }) =>
                 clsx(
@@ -148,6 +167,7 @@ export const Sidebar = ({ collapsed, setCollapsed }) => {
 
             <NavLink
               to="/admin"
+              onClick={handleNavClick}
               title={collapsed ? "Admin Portal" : undefined}
               className={({ isActive }) =>
                 clsx(
@@ -254,6 +274,7 @@ export const Sidebar = ({ collapsed, setCollapsed }) => {
         )}
       </div>
     </aside>
+    </>
   );
 };
 

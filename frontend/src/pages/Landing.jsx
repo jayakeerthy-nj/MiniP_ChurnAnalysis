@@ -168,49 +168,38 @@ export const Landing = () => {
       </header>
 
       {/* ======================================================== */}
-      {/* 1. HERO SECTION WITH TRANSLUCENT 6-STAGE ML PIPELINE */}
+      {/* 1. HERO SECTION WITH CALIBRATED RISK DECISION SYSTEM */}
       {/* ======================================================== */}
-      <section className="pt-14 pb-20 px-4 text-center relative z-10 max-w-6xl mx-auto min-h-[660px] flex flex-col items-center justify-center">
-        {/* 3D Rotating Orbital Animation Translucent Behind Hero Texts */}
-        <div className="absolute inset-0 flex items-center justify-center -top-6 pointer-events-none z-0 overflow-hidden">
-          <div className="w-full max-w-4xl h-[640px] opacity-45 md:opacity-55 scale-95 md:scale-105 pointer-events-auto">
-            <RadialOrbitalTimeline
-              timelineData={bankingPipelineTimelineData}
-              isHeroBackground={true}
-              radius={245}
-            />
-          </div>
-        </div>
-
+      <section className="pt-20 pb-20 px-4 text-center relative z-10 max-w-5xl mx-auto min-h-[580px] flex flex-col items-center justify-center">
         {/* Foreground Content Stack */}
         <div className="relative z-10 space-y-7 max-w-4xl mx-auto">
           {/* Announcement Pill */}
           <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-900/90 border border-neutral-800 text-xs text-neutral-300 hover:border-neutral-700 transition-colors shadow-xl backdrop-blur-lg font-grotesk cursor-pointer group">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-900/90 border border-neutral-800 text-xs text-neutral-300 hover:border-neutral-700 transition-colors shadow-lg backdrop-blur-lg font-grotesk cursor-pointer group">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span className="text-neutral-300 group-hover:text-white transition-colors">
-                New version of calibrated ML engine is out!
+                Calibrated ML inference engine active
               </span>
               <Link
                 to="/login"
                 className="text-white hover:text-emerald-400 flex items-center font-medium ml-1 transition-colors"
               >
-                <span>Read more</span>
+                <span>Read specs</span>
                 <ChevronRight className="w-3.5 h-3.5 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
           </div>
 
           {/* Hero Headline & Subtitle */}
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extralight tracking-tight text-white leading-[1.08] font-grotesk drop-shadow-sm">
+          <div className="space-y-4 max-w-3xl mx-auto">
+            <h1 className="text-4xl sm:text-6xl md:text-[68px] font-light tracking-tight text-white leading-[1.08] font-grotesk">
               Closing the gap between churn prediction and retention strategy
             </h1>
-            <p className="text-base sm:text-lg text-neutral-300 max-w-2xl mx-auto font-light leading-relaxed font-grotesk drop-shadow-sm">
-              A decision-support system for banking
+            <p className="text-base sm:text-lg text-neutral-300 max-w-2xl mx-auto font-light leading-relaxed font-grotesk">
+              Calibrated machine learning and explainable risk intelligence for institutional banking portfolios.
             </p>
           </div>
 
@@ -227,7 +216,7 @@ export const Landing = () => {
               to="/dashboard"
               className="w-full sm:w-auto bg-neutral-900/90 hover:bg-neutral-800 text-neutral-200 border border-neutral-800 font-medium text-sm px-6 py-3.5 rounded-lg backdrop-blur-md transition-all font-grotesk flex items-center justify-center gap-2 shadow-lg cursor-pointer"
             >
-              <span>Simulated Terminal Preview</span>
+              <span>Explore Analytics Console</span>
             </Link>
           </div>
 
@@ -261,15 +250,12 @@ export const Landing = () => {
       {/* 2. DEDICATED PIPELINE SHOWCASE & EXPLORATION */}
       {/* ======================================================== */}
       <section id="pipeline" className="max-w-6xl mx-auto px-4 py-16 relative z-10 font-grotesk border-t border-neutral-900">
-        <div className="text-center space-y-3 mb-10">
-          <span className="text-xs font-mono font-semibold text-white tracking-widest uppercase px-3 py-1 bg-neutral-900 border border-neutral-700 rounded-full inline-block">
-            DECISION ENGINE ARCHITECTURE
-          </span>
+        <div className="text-center space-y-2 mb-10">
           <h2 className="text-3xl sm:text-4xl font-light text-white tracking-tight">
             6-Stage Telemetry & ML Calibration Pipeline
           </h2>
           <p className="text-sm text-neutral-300 max-w-2xl mx-auto font-light leading-relaxed">
-            Click on any pipeline node below to inspect real-time transaction ingestion, Platt calibration thresholds, and counterfactual simulation parameters.
+            Select any pipeline stage below to inspect real-time transaction ingestion, isotonic regression, and counterfactual simulation parameters.
           </p>
         </div>
 
@@ -298,9 +284,9 @@ export const Landing = () => {
             <div className="text-[11px] font-mono text-neutral-300 bg-black/60 px-4 py-1 rounded border border-neutral-800">
               https://bank-analytics.internal/dashboard
             </div>
-            <div className="text-xs font-mono text-emerald-400 flex items-center gap-1">
+            <div className="text-xs font-mono text-emerald-400 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>LIVE ML TELEMETRY (PORT 5000 & 8000)</span>
+              <span>LIVE ML TELEMETRY ACTIVE</span>
             </div>
           </div>
 
@@ -347,10 +333,7 @@ export const Landing = () => {
       {/* 4. CAPABILITIES MATRIX */}
       {/* ======================================================== */}
       <section id="features" className="max-w-6xl mx-auto px-4 py-16 space-y-12 font-grotesk border-t border-neutral-900">
-        <div className="text-center space-y-3">
-          <span className="text-xs font-mono font-semibold text-white tracking-widest uppercase px-3 py-1 bg-neutral-900 border border-neutral-700 rounded-full inline-block">
-            CAPABILITIES MATRIX
-          </span>
+        <div className="text-center space-y-2">
           <h2 className="text-3xl sm:text-4xl font-light text-white tracking-tight">
             Built for Risk Officers & Portfolio Managers
           </h2>

@@ -3,7 +3,7 @@ import { useModel } from "../context/ModelContext";
 import React, { useEffect, useState } from "react";
 import { analyticsApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Card } from "../components/ui/Card";
+import { Card } from "../components/ui/card";
 import { Loading } from "../components/ui/Loading";
 import { formatPercent } from "../utils/formatters";
 import {
